@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	"github.com/go-shiori/go-readability"
 	"github.com/mmcdole/gofeed"
 )
@@ -85,8 +87,10 @@ var groqURL = "https://api.groq.com/openai/v1/chat/completions"
 ///////////////////////////////////////////////////////////
 
 func GenerateQuiz() (*Quiz, error) {
+	_ = godotenv.Load()
+
 	// Load API key from environment variable (never hardcode secrets)
- 	apiKey := os.Getenv("GROQ_API_KEY")
+	apiKey := os.Getenv("GROQ_API_KEY")
 	if apiKey == "" {
 		return nil, errors.New("GROQ_API_KEY environment variable is not set")
 	}

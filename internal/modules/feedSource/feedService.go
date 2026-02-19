@@ -21,3 +21,10 @@ func (s *Service) CreateFeed(ctx context.Context, Name string, URL string, Categ
 	}
 	return nil
 }
+
+func (s *Service) GetCategories(ctx context.Context) ([]string, error) {
+	return s.repo.GetCategories(ctx)
+}
+func (s *Service) GetFeedSourcesByCategory(ctx context.Context, categories []string)  ([]models.FeedSource, error) {
+	return s.repo.GetFeedSourcesByCategory(ctx, categories)
+}

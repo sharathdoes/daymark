@@ -14,5 +14,7 @@ func RegisterRoutes(r *gin.Engine, db  *gorm.DB, cfg *configs.Config){
 	g:=r.Group("/feed")
 	{
 		g.POST("/create", handler.CreateFeed)
+		g.GET("/categories", handler.GetCategories)
+		g.GET("/ofCategories", handler.GetFeedSourcesByCategory)
 	}
 }

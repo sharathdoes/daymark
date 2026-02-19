@@ -1,6 +1,9 @@
 package feedSource
 
-import "github.com/gin-gonic/gin"
+import (
+
+	"github.com/gin-gonic/gin"
+)
 
 type Handler struct {
 	s *Service
@@ -20,5 +23,30 @@ func (h *Handler) CreateFeed(c *gin.Context) {
 		c.JSON(500, gin.H{"error":err.Error()})
 	}
 	c.JSON(201, gin.H{"message":"feed Created Successfully"})
+}
+
+func (h *Handler) GetCategories(c *gin.Context) {
+	categories, err := h.s.GetCategories(c)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, CategoriesDTO{Categories: categories})
+}
+
+func (h *Handler) GetFeedSourcesByCategory(c *gin.Context) {
+	var body CategoriesDTO
+	if err:=c.ShouldBindJSON(&body); err!=nil {
+		c.JSON(401, gin.H{"error":"Body doesn't Match the Model"})
+		return
+	}
+	feed, err := h.s.GetFeedSourcesByCategory(c, body.Categories)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, feed)
 }
 

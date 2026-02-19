@@ -19,18 +19,3 @@ type FeedSource struct {
 	IsActive    bool           `gorm:"default:true" json:"is_active"`
 	Articles []Article `gorm:"foreignKey:FeedSourceID" json:"-"`
 }
-
-type Article struct {
-	ID          uint           `gorm:"primaryKey" json:"id"`
-	FeedSourceID uint          `gorm:"not null;index" json:"feed_source_id"`
-	Title       string         `gorm:"size:500;not null" json:"title"`
-	Description string         `gorm:"type:text" json:"description"`
-	Link        string         `gorm:"size:500;not null" json:"link"`
-	body string					
-	PublishedAt *time.Time     `json:"published_at"`
-	FetchedAt   time.Time      `json:"fetched_at"`
-	IsUsed      bool           `gorm:"default:false" json:"is_used"`       
-	CreatedAt   time.Time      `json:"created_at"`
-	FeedSource FeedSource 		`gorm:"foreignKey:FeedSourceID" json:"-"`
-	Questions  []Question `gorm:"foreignKey:ArticleID" json:"-"`
-}

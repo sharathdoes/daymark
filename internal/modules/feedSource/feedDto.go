@@ -7,3 +7,8 @@ type CreateFeedDTO struct {
 	URL      string         `json:"url"`
 	Category pq.StringArray `json:"category"`
 }
+
+type CategoriesDTO struct {
+	Categories []string `json:"categories"`
+}
+
