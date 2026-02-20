@@ -1,6 +1,7 @@
 package articles
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +21,13 @@ func (h *Handler) CreateArticlesOfCategories(c *gin.Context) {
 		c.JSON(401, gin.H{"error": "Body doesn't Match the Model"})
 		return
 	}
-	go h.serv.CreateArticlesOfCategories(c, body.Categories)
+
+	func(cat []string){
+		if err := h.serv.CreateArticlesOfCategories(cat); err != nil {
+			log.Println("background article creation failed:", err)
+		}
+	}(body.Categories)
+
 	c.JSON(http.StatusAccepted, gin.H{
     "message": "Article fetch started",
 	})

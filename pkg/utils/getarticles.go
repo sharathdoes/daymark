@@ -14,7 +14,10 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-func FetchArticlesFromFeeds(rssFeeds []models.FeedSource) ([]models.Article, error) {
+func FetchArticlesFromFeeds(
+	rssFeeds []models.FeedSource,
+	linkExists func(link string) (bool, error),
+) ([]models.Article, error){
 	parser := gofeed.NewParser()
 	parser.UserAgent = "Mozilla/5.0 (compatible; QuizBot/1.0)"
 	var articles []models.Article
@@ -37,6 +40,14 @@ func FetchArticlesFromFeeds(rssFeeds []models.FeedSource) ([]models.Article, err
 
 			if item.Link == "" {
 				continue
+			}
+			exists, err := linkExists(item.Link)
+			if err != nil {
+				log.Printf("Failed to check duplicate for '%s': %v", item.Link, err)
+				continue
+			}
+			if exists {
+				continue // 🚀 skip completely — no HTTP, no parsing
 			}
 
 			pub := time.Now()

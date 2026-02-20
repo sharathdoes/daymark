@@ -16,7 +16,11 @@ func Newservice(repo *Repository, feedSourceService *feedSource.Service) *Servic
 	return &Service{repo: repo, feedSourceService: feedSourceService}
 }
 
-func (s *Service) CreateArticlesOfCategories(ctx context.Context, categories []string) error {
+
+
+func (s *Service) CreateArticlesOfCategories( categories []string) error {
+		ctx:= context.Background()
+
 	if s.feedSourceService == nil {
 		return fmt.Errorf("feed source service is not initialized")
 	}
@@ -26,15 +30,15 @@ func (s *Service) CreateArticlesOfCategories(ctx context.Context, categories []s
 		return err
 	}
 
-	articlesList, err := utils.FetchArticlesFromFeeds(rssFeeds)
+	articlesList, err := utils.FetchArticlesFromFeeds(rssFeeds, s.repo.LinkExists)
 	if err != nil {
 		return err
 	}
 
-	for _, article := range articlesList {
-		if err := s.repo.CreateArticle(ctx, article); err != nil {
-			return err
-		}
+	
+	if err := s.repo.CreateArticle(ctx, articlesList); err != nil {
+		return err
 	}
+	
 	return nil
 }
