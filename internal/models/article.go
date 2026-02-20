@@ -10,5 +10,7 @@ type Article struct {
 	PublishedAt time.Time
 	Content     string    `gorm:"type:text"`
 	Processed   bool      `gorm:"default:false"`
+	QuestionsGenerated bool `gorm:"default:false"` // questions done
 	CreatedAt   time.Time
+	FeedSourceID uint
 }

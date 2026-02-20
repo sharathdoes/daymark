@@ -15,6 +15,7 @@ func Connect(url string) (*gorm.DB, error) {
 	
     db.AutoMigrate(
 		&models.FeedSource{},
+		&models.Article{},
     )
 	return db, nil
 }
