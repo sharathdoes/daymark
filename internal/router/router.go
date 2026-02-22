@@ -1,8 +1,7 @@
 package server
 
 import (
-	"daymark/configs"
-	"daymark/internal/modules/articles"
+	"daymark/config"
 	"daymark/internal/modules/category"
 	"daymark/internal/modules/feedSource"
 	"daymark/pkg/database"
@@ -14,17 +13,16 @@ import (
 
 type Server struct {
 	Engine *gin.Engine
-	Config *configs.Config
+	Config *config.Config
 }
 
-func New(cfg *configs.Config) *Server {
+func New(cfg *config.Config) *Server {
 	r := gin.Default()
 	db, err := database.Connect(cfg.DBUrl)
 	if err != nil {
 		log.Print("Error in Connecting with Database")
 	}
 	feedSource.RegisterRoutes(r, db, cfg)
-	articles.RegisterRoutes(r, db)
 	category.RegisterRoutes(r, db, cfg)
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
