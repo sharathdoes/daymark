@@ -8,7 +8,7 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-func FetchArticlesFromFeeds(feedSources []models.FeedSource) []models.Article {
+func FetchArticlesFromFeed(feedSources []models.FeedSource) []models.Article {
 	parser := gofeed.NewParser()
 	parser.UserAgent = "Mozilla/5.0 (compatible; QuizBot/1.0)"
 

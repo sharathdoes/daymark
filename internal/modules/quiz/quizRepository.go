@@ -15,14 +15,6 @@ func NewRepository(db *gorm.DB) *Repository {
 }
 
 func (r *Repository) SaveQuiz(questions []models.Question) error {
-	quiz := models.Quiz{}
-	if err := r.db.Create(&quiz).Error; err != nil {
-		return err
-	}
+	return nil
 
-	for i := range questions {
-		questions[i].QuizID = quiz.ID
-	}
-
-	return r.db.Create(&questions).Error
 }
