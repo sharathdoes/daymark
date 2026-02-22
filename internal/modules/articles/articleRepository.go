@@ -18,11 +18,11 @@ func (r *Repository) CreateArticle(ctx context.Context, art []models.Article) er
 	return r.db.WithContext(ctx).Create(&art).Error
 }
 
-func (r *Repository) LinkExists(link string) (bool, error) {
-	var count int64
-	err := r.db.Model(&models.Article{}).
-		Where("link = ?", link).
-		Count(&count).Error
-
-	return count > 0, err
+func (r *Repository) HasArticlesTodayOfCategory(ctx context.Context,categoryId uint) ( []models.Article, error) {
+	var articles []models.Article
+	err:=r.db.WithContext(ctx).Model(models.Article{}).Where(" categoryId = ?",categoryId).Find(&articles).Error
+	if err!=nil {
+		return nil, err
+	}
+	return articles, nil
 }

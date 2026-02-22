@@ -1,15 +1,15 @@
 package main
 
 import (
-	"daymark/configs"
-	"daymark/internal/server"
+	"daymark/config"
+	"daymark/internal/router"
 )
 
 // 	"daymark/cmd/workers"
 // 	"log"
 
 func main() {
-	cfg := configs.Load()
+	cfg := config.Load()
 	server:=server.New(cfg)
 	// quiz, err := workers.GenerateQuiz()
 	// if err != nil {

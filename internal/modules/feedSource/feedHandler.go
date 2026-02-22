@@ -19,21 +19,13 @@ func (h *Handler) CreateFeed(c *gin.Context) {
 		c.JSON(401, gin.H{"error":"Body doesn't Match the Model"})
 		return
 	}
-	if err:=h.s.CreateFeed(c, body.Name, body.URL, body.Category); err!=nil {
+	if err:=h.s.CreateFeed(c, body.Name, body.URL, body.CategoryId); err!=nil {
 		c.JSON(500, gin.H{"error":err.Error()})
 	}
 	c.JSON(201, gin.H{"message":"feed Created Successfully"})
 }
 
-func (h *Handler) GetCategories(c *gin.Context) {
-	categories, err := h.s.GetCategories(c)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
 
-	c.JSON(200, CategoriesDTO{Categories: categories})
-}
 
 func (h *Handler) GetFeedSourcesByCategory(c *gin.Context) {
 	var body CategoriesDTO
@@ -41,7 +33,7 @@ func (h *Handler) GetFeedSourcesByCategory(c *gin.Context) {
 		c.JSON(401, gin.H{"error":"Body doesn't Match the Model"})
 		return
 	}
-	feed, err := h.s.GetFeedSourcesByCategory(c, body.Categories)
+	feed, err := h.s.GetFeedSourcesByCategory(c, body.CategoryIds)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
