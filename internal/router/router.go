@@ -4,6 +4,7 @@ import (
 	"daymark/config"
 	"daymark/internal/modules/category"
 	"daymark/internal/modules/feedSource"
+	"daymark/internal/modules/quiz"
 	"daymark/pkg/database"
 	"log"
 	"net/http"
@@ -24,6 +25,7 @@ func New(cfg *config.Config) *Server {
 	}
 	feedSource.RegisterRoutes(r, db, cfg)
 	category.RegisterRoutes(r, db, cfg)
+	quiz.RegisterRoutes(r, db, cfg)
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
