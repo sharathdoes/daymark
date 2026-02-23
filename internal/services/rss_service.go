@@ -2,13 +2,17 @@ package services
 
 import (
 	"daymark/internal/models"
-	"log"
+	"fmt"
+	"net/http"
+	neturl "net/url"
+
 	"time"
 
+	"github.com/go-shiori/go-readability"
 	"github.com/mmcdole/gofeed"
 )
 
-func FetchArticlesFromFeeds(feedSources []models.FeedSource) []models.Article {
+func FetchArticlesFromFeeds(feedSources []models.FeedSource) ([]models.Article, error) {
 	parser := gofeed.NewParser()
 	parser.UserAgent = "Mozilla/5.0 (compatible; QuizBot/1.0)"
 
@@ -20,8 +24,7 @@ func FetchArticlesFromFeeds(feedSources []models.FeedSource) []models.Article {
 	for _, fs := range feedSources {
 		feed, err := parser.ParseURL(fs.URL)
 		if err != nil {
-			log.Printf("Failed to fetch RSS feed '%s': %v", fs.Name, err)
-			continue
+			return nil, err
 		}
 
 		for _, item := range feed.Items {
@@ -40,11 +43,15 @@ func FetchArticlesFromFeeds(feedSources []models.FeedSource) []models.Article {
 			if item.PublishedParsed != nil {
 				pub = *item.PublishedParsed
 			}
-
+			content,err:=extractArticleContent(item.Link)
+			if err!=nil {
+				return []models.Article{}, err
+			}
 			articles = append(articles, models.Article{
 				Title:        item.Title,
 				Link:         item.Link,
 				Source:       fs.Name,
+				Content: content,
 				PublishedAt:  pub,
 				CategoryID:   fs.CategoryId,
 				FeedSourceID: fs.ID,
@@ -52,5 +59,45 @@ func FetchArticlesFromFeeds(feedSources []models.FeedSource) []models.Article {
 		}
 	}
 
-	return articles
+	return articles, nil
+}
+
+func extractArticleContent(rawURL string) (string, error) {
+	client := &http.Client{Timeout: 15 * time.Second}
+
+	req, err := http.NewRequest("GET", rawURL, nil)
+	if err != nil {
+		return "",err
+	}
+
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("HTTP %d for URL: %s", resp.StatusCode, rawURL)
+	}
+
+	parsedURL, err := neturl.Parse(rawURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse URL: %w", err)
+	}
+
+	article, err := readability.FromReader(resp.Body, parsedURL)
+	if err != nil {
+		return "", fmt.Errorf("readability parse failed: %w", err)
+	}
+
+	text := cleanText(article.TextContent)
+	if len(text) > 4000 {
+		text = text[:4000]
+	}
+
+	return text, nil
 }

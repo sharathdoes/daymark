@@ -23,13 +23,17 @@ func (s *Service) GetTodayArticlesByCategory(ctx context.Context, categoryIDs []
 	return s.repo.HasArticlesTodayOfCategory(ctx, categoryIDs)
 }
 
-func (s *Service) SyncFromFeeds(ctx context.Context, feedSources []models.FeedSource, categoryIDs []uint) error {
-    fetched := services.FetchArticlesFromFeeds(feedSources)
-    if len(fetched) == 0 {
+func (s *Service) SyncFromFeeds(ctx context.Context, feedSources []models.FeedSource, categoryIDs []uint) ([]models.Article, error) {
+    fetched,err := services.FetchArticlesFromFeeds(feedSources)
+    if err !=nil {
         log.Println("No articles fetched from RSS feeds")
-        return nil
+        return nil,err
     }
-    return s.repo.BulkUpsert(ctx, fetched)
+    articles,err:= s.repo.BulkUpsert(ctx, fetched)
+	if err!=nil {
+		return nil, err
+	}
+	return articles, nil
 }
 
 func (s *Service) GetReadyArticles(ctx context.Context, categoryIDs []uint) ([]models.Article, error) {

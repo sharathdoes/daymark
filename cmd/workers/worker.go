@@ -86,6 +86,47 @@ var groqURL = "https://api.groq.com/openai/v1/chat/completions"
 // MAIN LOGIC
 ///////////////////////////////////////////////////////////
 
+func extractArticleContent(rawURL string) (string, error) {
+	client := &http.Client{Timeout: 15 * time.Second}
+
+	req, err := http.NewRequest("GET", rawURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("invalid URL %s: %w", rawURL, err)
+	}
+
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("HTTP request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("HTTP %d for URL: %s", resp.StatusCode, rawURL)
+	}
+
+	parsedURL, err := neturl.Parse(rawURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse URL: %w", err)
+	}
+
+	article, err := readability.FromReader(resp.Body, parsedURL)
+	if err != nil {
+		return "", fmt.Errorf("readability parse failed: %w", err)
+	}
+
+	text := cleanText(article.TextContent)
+	if len(text) > 4000 {
+		text = text[:4000]
+	}
+
+	return text, nil
+}
+
+
 func GenerateQuiz() (*Quiz, error) {
 	_ = godotenv.Load()
 
@@ -208,46 +249,6 @@ func fetchArticlesFromFeeds() ([]Article, error) {
 ///////////////////////////////////////////////////////////
 // ARTICLE EXTRACTION
 ///////////////////////////////////////////////////////////
-
-func extractArticleContent(rawURL string) (string, error) {
-	client := &http.Client{Timeout: 15 * time.Second}
-
-	req, err := http.NewRequest("GET", rawURL, nil)
-	if err != nil {
-		return "", fmt.Errorf("invalid URL %s: %w", rawURL, err)
-	}
-
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-	req.Header.Set("Accept", "text/html,application/xhtml+xml")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("HTTP request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("HTTP %d for URL: %s", resp.StatusCode, rawURL)
-	}
-
-	parsedURL, err := neturl.Parse(rawURL)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse URL: %w", err)
-	}
-
-	article, err := readability.FromReader(resp.Body, parsedURL)
-	if err != nil {
-		return "", fmt.Errorf("readability parse failed: %w", err)
-	}
-
-	text := cleanText(article.TextContent)
-	if len(text) > 4000 {
-		text = text[:4000]
-	}
-
-	return text, nil
-}
 
 func cleanText(text string) string {
 	text = strings.TrimSpace(text)

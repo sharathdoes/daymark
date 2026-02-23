@@ -38,19 +38,20 @@ func (r *Repository) HasArticlesTodayOfCategory(ctx context.Context,categoryIds 
 	return articles, nil
 }
 
-// BulkUpsert inserts articles, skips duplicates based on unique link
-func (r *Repository) BulkUpsert(ctx context.Context, articles []models.Article) error {
-	return r.db.WithContext(ctx).
+// BulkUpsert inserts articles & skips duplicates based on unique link
+func (r *Repository) BulkUpsert(ctx context.Context, articles []models.Article) ([]models.Article, error) {
+	err:= r.db.WithContext(ctx).
 		Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "link"}},
-			DoNothing: true,
+			DoNothing: true,	
 		}).
 		Create(&articles).Error
+		return articles, err
 }
 
 
 
-// GetReadyArticles returns today's articles that have content (ready for quiz)
+// GetReadyArticles returns todays articles that have content (ready for quiz)
 func (r *Repository) GetReadyArticles(ctx context.Context, categoryIDs []uint) ([]models.Article, error) {
 	var articles []models.Article
 
