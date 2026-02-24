@@ -108,22 +108,31 @@ func GenerateQuiz(NumberOfQuestions int, categoryIds []uint, apiKey string, diff
 func generateQuestionsWithGroq(articleURL string, articleTitle string, articleText string, apiKey string) (string, []models.Question, error) {
 	prompt := fmt.Sprintf(`You must return ONLY valid JSON. No markdown, no explanation, no extra text.
 
-	Return exactly this format:
-	[
-		{
-			"title": "Short quiz title based on this article",
-			"question": "Question text here?",
-			"options": ["Option A", "Option B", "Option C", "Option D"],
-			"answer": 0
-		}
-	]
+Return exactly this format:
+[
+	{
+		"title": "Catchy category-based quiz title (e.g., Polity Pulse, Economy Check, World Watch, Science Snap, Environment Brief)",
+		"question": "Direct factual question from the article?",
+		"options": ["Option A", "Option B", "Option C", "Option D"],
+		"answer": 0
+	}
+]
 
-	The "answer" field is the zero-based index of the correct option (0, 1, 2, or 3).
+The "answer" field must be the zero-based index of the correct option (0, 1, 2, or 3).
 
-	Generate 3 UPSC-style multiple choice questions based on the following article. Focus on facts, events, people, places, and policies mentioned.
+Generate EXACTLY 3 simple UPSC-style multiple choice questions based ONLY on clearly stated facts in the article.
 
-	Article title: %s
-	Article content: %s`, articleTitle, articleText)
+IMPORTANT RULES:
+- Do NOT ask deep analytical, opinion-based, or conceptual questions.
+- Do NOT frame questions on theoretical background beyond what is mentioned.
+- Keep questions straightforward and factual.
+- Each question must focus on a DIFFERENT fact, event, person, place, scheme, date, or policy mentioned in the article.
+- Cover different parts of the article quickly. Do not stay on the same sub-topic.
+- The title must be catchy and category-based, NOT about the specific subject of the article.
+- Keep questions concise and exam-oriented.
+
+Article title: %s
+Article content: %s`, articleTitle, articleText)
 
 	requestBody := GroqRequest{
 		Model: "llama-3.3-70b-versatile",
