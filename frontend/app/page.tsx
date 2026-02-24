@@ -1,23 +1,28 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Category, ApiError } from '@/types';
-import { getCategories, generateQuiz } from '@/lib/api';
-import { useQuizStore } from '@/lib/quizStore';
-import { Header } from '@/components/Header';
-import { LoadingOverlay } from '@/components/LoadingOverlay';
-import { ErrorBanner } from '@/components/ErrorBanner';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getCategories, generateQuiz } from "@/lib/api";
+import { useQuizStore } from "@/lib/quizStore";
+import { Category, QuizSession } from "@/types";
+import { Header } from "@/components/Header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { AlertCircle, X, Loader2 } from "lucide-react";
 
-const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
+const DIFFICULTIES = ["Easy", "Medium", "Hard"];
 
 export default function HomePage() {
   const router = useRouter();
   const { setCurrentSession, setLoading, setError, error } = useQuizStore();
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(
+    null,
+  );
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
 
@@ -28,11 +33,8 @@ export default function HomePage() {
         setError(null);
         const data = await getCategories();
         setCategories(data);
-      } catch (err) {
-        const apiError: ApiError = {
-          message: 'Failed to load categories. Please try again.',
-        };
-        setError(apiError);
+      } catch {
+        setError({ message: "Failed to load categories. Please try again." });
       } finally {
         setIsLoadingCategories(false);
       }
@@ -41,130 +43,170 @@ export default function HomePage() {
     fetchCategories();
   }, [setError]);
 
+  const toggleCategory = (id: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
+    );
+  };
+
   const handleStartQuiz = async () => {
-    if (!selectedCategory || !selectedDifficulty) return;
+    if (!selectedCategories.length || !selectedDifficulty) return;
 
     try {
       setIsGeneratingQuiz(true);
-      setLoading(true, 'Generating your quiz...');
+      setLoading(true, "Generating your quiz...");
       setError(null);
-
-      const session = await generateQuiz(
-        selectedCategory,
-        selectedDifficulty.toLowerCase()
+      const rawQuiz: any = await generateQuiz(
+        selectedCategories,
+        selectedDifficulty.toLowerCase(),
       );
+
+      const transformedQuestions = rawQuiz.questions.map(
+        (q: any, index: number) => ({
+          id: String(index),
+          text: q.question,
+          options: q.options,
+          correctAnswer: q.answer,
+          explanation: "",
+        }),
+      );
+
+      const session: QuizSession = {
+        id: String(rawQuiz.id ?? ""),
+        categoryId: selectedCategories.join(","),
+        difficulty: rawQuiz.difficulty ?? selectedDifficulty.toLowerCase(),
+        questions: transformedQuestions,
+        currentQuestionIndex: 0,
+        answers: Array(transformedQuestions.length).fill(null),
+        score: 0,
+        completed: false,
+        createdAt:
+          rawQuiz.created_at ?? new Date().toISOString(),
+      };
 
       setCurrentSession(session);
       setLoading(false);
-      router.push('/quiz');
-    } catch (err) {
-      const apiError: ApiError = {
-        message: 'Failed to generate quiz. Please try again.',
-      };
-      setError(apiError);
+      router.push("/quiz");
+    } catch {
+      setError({ message: "Failed to generate quiz. Please try again." });
       setLoading(false);
     } finally {
       setIsGeneratingQuiz(false);
     }
   };
 
-  const canStartQuiz = selectedCategory && selectedDifficulty && !isGeneratingQuiz;
+  const canStart =
+    selectedCategories.length > 0 && selectedDifficulty && !isGeneratingQuiz;
 
   return (
-    <div>
+    <div className="min-h-screen bg-background">
       <Header />
-      <LoadingOverlay isVisible={isGeneratingQuiz} />
 
-      <div className="container py-12 md:py-16">
-        <div className="max-w-2xl mx-auto">
-          {/* Hero Section */}
-          <div className="mb-12 text-center">
-            <h1 className="mb-4 text-balance">Test Your News Knowledge</h1>
-            <p className="text-xl text-muted-foreground">
-              Choose a category and difficulty level to start your daily brief quiz.
-            </p>
-          </div>
-
-          {/* Error Banner */}
-          {error && (
-            <div className="mb-6">
-              <ErrorBanner
-                message={error.message}
-                onRetry={() => window.location.reload()}
-                onDismiss={() => setError(null)}
-              />
-            </div>
-          )}
-
-          {/* Loading State */}
-          {isLoadingCategories ? (
-            <div className="flex justify-center py-12">
-              <div className="text-center">
-                <div className="flex gap-1 justify-center mb-4">
-                  <div className="w-2 h-8 bg-accent rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-8 bg-accent rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-8 bg-accent rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-                <p className="text-muted-foreground">Loading categories...</p>
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Categories Section */}
-              <div className="mb-12">
-                <h2 className="text-2xl font-serif font-bold mb-6">Choose a Category</h2>
-                <div className="grid gap-3">
-                  {categories.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => setSelectedCategory(category.id)}
-                      className={`p-4 text-left rounded-[var(--radius)] border-2 transition-all ${
-                        selectedCategory === category.id
-                          ? 'border-accent bg-accent bg-opacity-5'
-                          : 'border-border hover:border-accent'
-                      }`}
-                      aria-pressed={selectedCategory === category.id}
-                    >
-                      <div className="font-serif font-bold text-lg">{category.name}</div>
-                      <div className="text-sm text-muted-foreground mt-1">{category.description}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Difficulty Section */}
-              <div className="mb-12">
-                <h2 className="text-2xl font-serif font-bold mb-6">Select Difficulty</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {DIFFICULTIES.map((difficulty) => (
-                    <button
-                      key={difficulty}
-                      onClick={() => setSelectedDifficulty(difficulty)}
-                      className={`p-6 rounded-[var(--radius)] border-2 transition-all text-center min-h-[120px] flex items-center justify-center ${
-                        selectedDifficulty === difficulty
-                          ? 'border-accent bg-accent bg-opacity-5'
-                          : 'border-border hover:border-accent'
-                      }`}
-                      aria-pressed={selectedDifficulty === difficulty}
-                    >
-                      <div className="font-serif font-bold text-2xl">{difficulty}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Start Button */}
-              <button
-                onClick={handleStartQuiz}
-                disabled={!canStartQuiz}
-                className="button-primary w-full text-lg"
-              >
-                Start Quiz
-              </button>
-            </>
-          )}
+      <main className="max-w-3xl mx-auto px-6 py-16">
+        <div className="mb-10">
+          <h1 className="text-3xl font-semibold tracking-tight mb-2">
+            Test your knowledge
+          </h1>
+          <p className="text-muted-foreground">
+            Pick a topic and difficulty to begin.
+          </p>
         </div>
-      </div>
+
+        <Separator className="mb-10" />
+
+        {error && (
+          <Alert variant="destructive" className="mb-8">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>{error.message}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 ml-4 shrink-0"
+                onClick={() => setError(null)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {isLoadingCategories ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground py-8">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Loading categories…</span>
+          </div>
+        ) : (
+          <>
+            {/* Categories */}
+            <section className="mb-12">
+              <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-4">
+                Category
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                {categories.map((cat) => {
+                  const id = String((cat as any).ID ?? (cat as any).id);
+                  const name = (cat as any).Name ?? (cat as any).name;
+                  const isSelected = selectedCategories.includes(id);
+
+                  return (
+                    <Card
+                      key={id}
+                      onClick={() => toggleCategory(id)}
+                      className={`cursor-pointer transition-all hover:shadow-sm px-4 py-2 ${
+                        isSelected ? "ring-2 ring-primary" : ""
+                      }`}
+                    >
+                      <CardContent className="p-0">
+                        <p className="text-sm font-medium whitespace-nowrap">
+                          {name}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* Difficulty */}
+            <section className="mb-12">
+              <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-4">
+                Difficulty
+              </p>
+
+              <div className="flex gap-3 flex-wrap">
+                {DIFFICULTIES.map((d) => (
+                  <Button
+                    key={d}
+                    variant={selectedDifficulty === d ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedDifficulty(d)}
+                  >
+                    {d}
+                  </Button>
+                ))}
+              </div>
+            </section>
+
+            <Button
+              onClick={handleStartQuiz}
+              disabled={!canStart}
+              size="lg"
+              className="w-full sm:w-auto"
+            >
+              {isGeneratingQuiz ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating…
+                </>
+              ) : (
+                "Start quiz"
+              )}
+            </Button>
+          </>
+        )}
+      </main>
     </div>
   );
 }

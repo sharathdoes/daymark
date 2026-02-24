@@ -1,6 +1,7 @@
-import { Category, QuizSession, QuizResult, ApiError, Question } from '@/types';
+import { Category, QuizSession, ApiError, Question } from '@/types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+// Backend base URL (Gin server). Can be overridden with NEXT_PUBLIC_API_URL.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
@@ -15,7 +16,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 export async function getCategories(): Promise<Category[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/categories`, {
+  const response = await fetch(`${API_BASE_URL}/category/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -28,55 +29,28 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function generateQuiz(
-  categoryId: string,
+  categoryIds: string[],
   difficulty: string,
   numberOfQuestions: number = 5
 ): Promise<QuizSession> {
   try {
-    const response = await fetch(`${API_BASE_URL}/quizzes/generate`, {
+  const response = await fetch(`${API_BASE_URL}/quiz/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        category_id: categoryId,
-        difficulty,
-        number_of_questions: numberOfQuestions,
+    category_ids: categoryIds.map((id) => Number(id)),
+    difficulty,
+    number_of_questions: numberOfQuestions,
       }),
     });
+    console.log(response)
     return handleResponse<QuizSession>(response);
   } catch (error) {
     throw error as ApiError;
   }
 }
 
-export async function submitQuiz(session: QuizSession): Promise<QuizResult> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/quizzes/${session.id}/submit`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        answers: session.answers,
-      }),
-    });
-    return handleResponse<QuizResult>(response);
-  } catch (error) {
-    throw error as ApiError;
-  }
-}
-
-export async function getQuizResult(quizId: string): Promise<QuizResult> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/quizzes/${quizId}/results`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    return handleResponse<QuizResult>(response);
-  } catch (error) {
-    throw error as ApiError;
-  }
-}
+// submitQuiz and getQuizResult are now handled entirely on the frontend
+// via quizStore.computeResult and the /results page.

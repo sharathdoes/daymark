@@ -1,9 +1,8 @@
-export interface Category {
-  id: string;
-  name: string;
-  description: string;
-}
-
+export type Category = {
+  ID: number;
+  Name: string;
+  Slug: string;
+};
 export interface Question {
   id: string;
   text: string;

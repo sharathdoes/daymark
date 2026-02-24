@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Crimson_Text, Inter } from 'next/font/google';
 import './globals.css';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 const crimsonText = Crimson_Text({
   subsets: ['latin'],
@@ -32,9 +33,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${crimsonText.variable} font-sans`}>
-        <main className="min-h-screen bg-background text-foreground">
-          {children}
-        </main>
+        <ThemeProvider>
+          <main className="min-h-screen bg-background text-foreground">
+            {children}
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   );

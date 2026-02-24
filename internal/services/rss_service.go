@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	neturl "net/url"
-
+	"strings"
 	"time"
 
 	"github.com/go-shiori/go-readability"
@@ -29,7 +29,7 @@ func FetchArticlesFromFeeds(feedSources []models.FeedSource) ([]models.Article, 
 
 		itemCount := 0
 		for _, item := range feed.Items {
-			if itemCount >= 10 {
+			if itemCount >= 5 {
 				break
 			}
 
@@ -52,13 +52,18 @@ func FetchArticlesFromFeeds(feedSources []models.FeedSource) ([]models.Article, 
 			if err != nil {
 				return []models.Article{}, err
 			}
+			var categoryID uint
+			if len(feedSources[i].Categories) > 0 {
+				categoryID = feedSources[i].Categories[0].ID
+			}
+
 			articles = append(articles, models.Article{
-				Title:        item.Title,
+				Title:        strings.ToValidUTF8(item.Title, ""),
 				Link:         item.Link,
-				Source:       feedSources[i].Name,
-				Content:      content,
+				Source:       strings.ToValidUTF8(feedSources[i].Name, ""),
+				Content:      strings.ToValidUTF8(content, ""),
 				PublishedAt:  pub,
-				Categories:   feedSources[i].Categories,
+				CategoryID:   categoryID,
 				FeedSourceID: feedSources[i].ID,
 			})
 			itemCount++

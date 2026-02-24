@@ -1,175 +1,164 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useQuizStore } from '@/lib/quizStore';
-import { submitQuiz } from '@/lib/api';
-import { Header } from '@/components/Header';
-import { LoadingOverlay } from '@/components/LoadingOverlay';
-import { ErrorBanner } from '@/components/ErrorBanner';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useQuizStore } from "@/lib/quizStore";
+import { Header } from "@/components/Header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { AlertCircle, X, Loader2 } from "lucide-react";
 
 export default function QuizPage() {
   const router = useRouter();
-  const { currentSession, recordAnswer, setLoading, setError, error } = useQuizStore();
+  const { currentSession, recordAnswer, setLoading, setError, computeResult, error } =
+    useQuizStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Redirect if no quiz session
   useEffect(() => {
-    if (!currentSession) {
-      router.push('/');
-    }
+    if (!currentSession) router.push("/");
   }, [currentSession, router]);
 
-  if (!currentSession) {
-    return null;
-  }
+  if (!currentSession) return null;
 
-  const currentQuestion = currentSession.questions[currentSession.currentQuestionIndex];
-  const progressPercentage = ((currentSession.currentQuestionIndex + 1) / currentSession.questions.length) * 100;
-  const userAnswer = currentSession.answers[currentSession.currentQuestionIndex];
-
-  const handleAnswerClick = (optionIndex: number) => {
-    recordAnswer(currentSession.currentQuestionIndex, optionIndex);
-  };
+  const { questions, currentQuestionIndex, answers } = currentSession;
+  const question = questions[currentQuestionIndex];
+  const userAnswer = answers[currentQuestionIndex];
+  const isLast = currentQuestionIndex === questions.length - 1;
+  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
   const handleNext = async () => {
-    const isLastQuestion = currentSession.currentQuestionIndex === currentSession.questions.length - 1;
-
-    if (isLastQuestion) {
-      // Submit the quiz
+    if (isLast) {
       try {
         setIsSubmitting(true);
-        setLoading(true, 'Calculating your score...');
+        setLoading(true, "Calculating your score...");
         setError(null);
-
-        const result = await submitQuiz(currentSession);
-
+        const result = computeResult();
         setLoading(false);
-        router.push(`/results/${result.sessionId}`);
-      } catch (err) {
-        setError({
-          message: 'Failed to submit quiz. Please try again.',
-        });
+        if (result) {
+          router.push(`/results`);
+        } else {
+          setError({ message: "Unable to compute result." });
+        }
+      } catch {
+        setError({ message: "Failed to submit quiz. Please try again." });
         setLoading(false);
       } finally {
         setIsSubmitting(false);
       }
     } else {
-      // Move to next question
       useQuizStore.setState({
         currentSession: {
           ...currentSession,
-          currentQuestionIndex: currentSession.currentQuestionIndex + 1,
+          currentQuestionIndex: currentQuestionIndex + 1,
         },
       });
     }
   };
 
   const handlePrevious = () => {
-    if (currentSession.currentQuestionIndex > 0) {
+    if (currentQuestionIndex > 0) {
       useQuizStore.setState({
         currentSession: {
           ...currentSession,
-          currentQuestionIndex: currentSession.currentQuestionIndex - 1,
+          currentQuestionIndex: currentQuestionIndex - 1,
         },
       });
     }
   };
 
-  const isLastQuestion = currentSession.currentQuestionIndex === currentSession.questions.length - 1;
-  const canProceed = userAnswer !== null;
-
   return (
-    <div>
+    <div className="min-h-screen bg-background">
       <Header showBackButton backHref="/" />
-      <LoadingOverlay isVisible={isSubmitting} />
 
-      <div className="container py-8 md:py-12">
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-muted-foreground font-medium">
-              Question {currentSession.currentQuestionIndex + 1} of {currentSession.questions.length}
+      <main className="max-w-2xl mx-auto px-6 py-12">
+        {/* Progress */}
+        <div className="mb-10">
+          <div className="flex justify-between text-xs text-muted-foreground mb-2">
+            <span>
+              Question {currentQuestionIndex + 1} of {questions.length}
             </span>
-            <span className="text-sm font-medium text-accent">{Math.round(progressPercentage)}%</span>
+            <span>{Math.round(progress)}%</span>
           </div>
-          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-            <div
-              className="bg-accent h-full rounded-full transition-all duration-300"
-              style={{ width: `${progressPercentage}%` }}
-              role="progressbar"
-              aria-valuenow={currentSession.currentQuestionIndex + 1}
-              aria-valuemin={1}
-              aria-valuemax={currentSession.questions.length}
-            />
-          </div>
+          <Progress value={progress} className="h-1" />
         </div>
 
-        {/* Error Banner */}
+        {/* Error */}
         {error && (
-          <div className="mb-6">
-            <ErrorBanner
-              message={error.message}
-              onDismiss={() => setError(null)}
-            />
-          </div>
+          <Alert variant="destructive" className="mb-8">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>{error.message}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 ml-4 shrink-0"
+                onClick={() => setError(null)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </AlertDescription>
+          </Alert>
         )}
 
-        {/* Question Section */}
-        <div className="max-w-2xl mx-auto mb-12">
-          <h1 className="text-3xl md:text-4xl font-serif font-bold mb-8 text-balance">
-            {currentQuestion.text}
-          </h1>
+        {/* Question */}
+        <h1 className="text-2xl font-semibold tracking-tight mb-8 leading-snug">
+          {question.text}
+        </h1>
 
-          {/* Options */}
-          <div className="space-y-3">
-            {currentQuestion.options.map((option, index) => (
-              <button
-                key={index}
-                onClick={() => handleAnswerClick(index)}
-                className={`w-full p-4 text-left rounded-[var(--radius)] border-2 transition-all text-lg ${
-                  userAnswer === index
-                    ? 'border-accent bg-accent bg-opacity-5'
-                    : 'border-border hover:border-accent'
-                }`}
-                aria-pressed={userAnswer === index}
-                disabled={isSubmitting}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center font-medium text-sm mt-0.5 transition-all ${
-                      userAnswer === index
-                        ? 'border-accent bg-accent text-accent-foreground'
-                        : 'border-border'
-                    }`}
-                  >
-                    {userAnswer === index && '✓'}
-                  </div>
-                  <span>{option}</span>
-                </div>
-              </button>
-            ))}
-          </div>
+        {/* Options */}
+        <div className="flex flex-col gap-2 mb-10">
+          {question.options.map((option, i) => (
+            <Card
+              key={i}
+              onClick={() =>
+                !isSubmitting && recordAnswer(currentQuestionIndex, i)
+              }
+              className={`cursor-pointer transition-colors ${
+                userAnswer === i
+                  ? "border-foreground bg-foreground/5"
+                  : "hover:border-foreground/40"
+              }`}
+            >
+              <CardContent className="px-4 py-3 flex items-center gap-3">
+                <span
+                  className={`text-xs font-medium shrink-0 ${userAnswer === i ? "text-foreground" : "text-muted-foreground"}`}
+                >
+                  {String.fromCharCode(65 + i)}
+                </span>
+                <span className="text-sm">{option}</span>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Navigation Buttons */}
-        <div className="max-w-2xl mx-auto flex gap-4">
-          <button
+        {/* Navigation */}
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
             onClick={handlePrevious}
-            disabled={currentSession.currentQuestionIndex === 0 || isSubmitting}
-            className="button-secondary flex-1"
+            disabled={currentQuestionIndex === 0 || isSubmitting}
           >
             Previous
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleNext}
-            disabled={!canProceed || isSubmitting}
-            className="button-primary flex-1"
+            disabled={userAnswer == null || isSubmitting}
           >
-            {isLastQuestion ? 'Submit Quiz' : 'Next Question'}
-          </button>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting…
+              </>
+            ) : isLast ? (
+              "Submit"
+            ) : (
+              "Next"
+            )}
+          </Button>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

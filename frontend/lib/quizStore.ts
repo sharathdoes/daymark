@@ -1,11 +1,12 @@
 'use client';
 
 import { create } from 'zustand';
-import { QuizSession, ApiError } from '@/types';
+import { QuizSession, QuizResult, ApiError, QuestionResult } from '@/types';
 
 interface QuizStore {
   // State
   currentSession: QuizSession | null;
+  lastResult: QuizResult | null;
   loading: boolean;
   error: ApiError | null;
   loadingMessage: string;
@@ -15,11 +16,13 @@ interface QuizStore {
   setLoading: (loading: boolean, message?: string) => void;
   setError: (error: ApiError | null) => void;
   recordAnswer: (questionIndex: number, answerIndex: number) => void;
+  computeResult: () => QuizResult | null;
   clearSession: () => void;
 }
 
 export const useQuizStore = create<QuizStore>((set) => ({
   currentSession: null,
+  lastResult: null,
   loading: false,
   error: null,
   loadingMessage: '',
@@ -44,8 +47,55 @@ export const useQuizStore = create<QuizStore>((set) => ({
   clearSession: () =>
     set({
       currentSession: null,
+      lastResult: null,
       loading: false,
       error: null,
       loadingMessage: '',
     }),
+
+  computeResult: () => {
+    let computed: QuizResult | null = null;
+    set((state) => {
+      const session = state.currentSession;
+      if (!session) return state;
+
+      const total = session.questions.length;
+      let score = 0;
+
+      const questions: QuestionResult[] = session.questions.map((q, index) => {
+        const userAnswer = session.answers[index];
+        const isCorrect = userAnswer !== null && userAnswer === q.correctAnswer;
+        if (isCorrect) score++;
+
+        return {
+          id: q.id,
+          text: q.text,
+          userAnswer,
+          correctAnswer: q.correctAnswer,
+          options: q.options,
+          explanation: q.explanation,
+          isCorrect,
+        };
+      });
+
+      const percentage = total > 0 ? (score / total) * 100 : 0;
+
+      computed = {
+        sessionId: session.id,
+        categoryName: '',
+        difficulty: session.difficulty,
+        score,
+        totalQuestions: total,
+        percentage,
+        questions,
+      };
+
+      return {
+        ...state,
+        lastResult: computed,
+      };
+    });
+
+    return computed;
+  },
 }));
