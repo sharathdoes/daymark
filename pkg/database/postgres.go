@@ -12,10 +12,11 @@ func Connect(url string) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	
-    db.AutoMigrate(
+
+	db.AutoMigrate(
+		&models.Category{},
 		&models.FeedSource{},
 		&models.Article{},
-    )
+	)
 	return db, nil
 }

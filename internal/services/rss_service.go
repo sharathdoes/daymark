@@ -58,7 +58,7 @@ func FetchArticlesFromFeeds(feedSources []models.FeedSource) ([]models.Article, 
 				Source:       feedSources[i].Name,
 				Content:      content,
 				PublishedAt:  pub,
-				CategoryID:   feedSources[i].CategoryId,
+				Categories:   feedSources[i].Categories,
 				FeedSourceID: feedSources[i].ID,
 			})
 			itemCount++

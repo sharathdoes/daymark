@@ -1,7 +1,6 @@
 package feedSource
 
 import (
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,29 +14,27 @@ func NewHandler(s *Service) *Handler {
 
 func (h *Handler) CreateFeed(c *gin.Context) {
 	var body CreateFeedDTO
-	if err:=c.ShouldBindJSON(&body); err!=nil {
-		c.JSON(401, gin.H{"error":"Body doesn't Match the Model"})
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(401, gin.H{"error": "Body doesn't Match the Model"})
 		return
 	}
-	// basic validation: categoryId must be provided and non-zero
-	if body.CategoryId == 0 {
-		c.JSON(400, gin.H{"error":"invalid or missing categoryId"})
+	// basic validation: at least one categoryId must be provided
+	if len(body.CategoryIds) == 0 {
+		c.JSON(400, gin.H{"error": "at least one categoryId is required"})
 		return
 	}
 
-	if err:=h.s.CreateFeed(c, body.Name, body.URL, body.CategoryId); err!=nil {
-		c.JSON(500, gin.H{"error":err.Error()})
+	if err := h.s.CreateFeed(c, body.Name, body.URL, body.CategoryIds); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(201, gin.H{"message":"feed Created Successfully"})
+	c.JSON(201, gin.H{"message": "feed Created Successfully"})
 }
-
-
 
 func (h *Handler) GetFeedSourcesByCategory(c *gin.Context) {
 	var body CategoriesDTO
-	if err:=c.ShouldBindJSON(&body); err!=nil {
-		c.JSON(401, gin.H{"error":"Body doesn't Match the Model"})
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(401, gin.H{"error": "Body doesn't Match the Model"})
 		return
 	}
 	feed, err := h.s.GetFeedSourcesByCategory(c, body.CategoryIds)
@@ -48,4 +45,3 @@ func (h *Handler) GetFeedSourcesByCategory(c *gin.Context) {
 
 	c.JSON(200, feed)
 }
-
