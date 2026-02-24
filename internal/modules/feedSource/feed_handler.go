@@ -12,6 +12,18 @@ func NewHandler(s *Service) *Handler {
 	return &Handler{s}
 }
 
+// CreateFeed godoc
+// @Summary      Create feed source
+// @Description  Create a new feed source with one or more category IDs
+// @Tags         feed
+// @Accept       json
+// @Produce      json
+// @Param        payload  body      CreateFeedDTO  true  "Feed payload"
+// @Success      201      {object}  map[string]string
+// @Failure      400      {object}  map[string]string
+// @Failure      401      {object}  map[string]string
+// @Failure      500      {object}  map[string]string
+// @Router       /feed/create [post]
 func (h *Handler) CreateFeed(c *gin.Context) {
 	var body CreateFeedDTO
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -31,6 +43,17 @@ func (h *Handler) CreateFeed(c *gin.Context) {
 	c.JSON(201, gin.H{"message": "feed Created Successfully"})
 }
 
+// GetFeedSourcesByCategory godoc
+// @Summary      Get feeds by category IDs
+// @Description  Get feed sources that belong to any of the given category IDs
+// @Tags         feed
+// @Accept       json
+// @Produce      json
+// @Param        payload  body      CategoriesDTO      true  "Category IDs"
+// @Success      200      {array}   models.FeedSource
+// @Failure      401      {object}  map[string]string
+// @Failure      500      {object}  map[string]string
+// @Router       /feed/ofCategories [get]
 func (h *Handler) GetFeedSourcesByCategory(c *gin.Context) {
 	var body CategoriesDTO
 	if err := c.ShouldBindJSON(&body); err != nil {

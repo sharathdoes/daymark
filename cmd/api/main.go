@@ -2,7 +2,9 @@ package main
 
 import (
 	"daymark/config"
-	"daymark/internal/router"
+	server "daymark/internal/router"
+
+	docs "daymark/docs"
 )
 
 // 	"daymark/cmd/workers"
@@ -10,7 +12,11 @@ import (
 
 func main() {
 	cfg := config.Load()
-	server:=server.New(cfg)
+	docs.SwaggerInfo.Title = "Daymark API"
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.Description = "API documentation for Daymark services"
+	docs.SwaggerInfo.BasePath = "/"
+	server := server.New(cfg)
 	// quiz, err := workers.GenerateQuiz()
 	// if err != nil {
 	// 	log.Print("error: ", err)
