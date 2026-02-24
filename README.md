@@ -1,4 +1,4 @@
-# Daymark / Daily Brief API
+# Daily Brief
 
 Backend service for generating daily briefs and quizzes from news feeds. Built with Go, Gin, and PostgreSQL.
 
