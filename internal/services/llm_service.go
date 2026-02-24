@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"regexp"
 	"strings"
@@ -56,16 +57,21 @@ func cleanText(text string) string {
 
 func GenerateQuiz(NumberOfQuestions int, categoryIds []uint, apiKey string, difficulty string, articles []models.Article) (*models.Quiz, error) {
 	var allQuestions []models.Question
+
 	var quizTitle string
+	r := rand.New(rand.NewSource(rand.Int63()))
+	r.Shuffle(len(articles), func(i, j int) {
+		articles[i], articles[j] = articles[j], articles[i]
+	})
 
 	for i, article := range articles {
-		if i >= 5 {
+		if i >= 8 {
 			break
 		}
 
 		log.Printf("Processing article %d: %s", i+1, article.Title)
 
-		generatedTitle, questions, err := generateQuestionsWithGroq(article.Title, article.Content, apiKey)
+		generatedTitle, questions, err := generateQuestionsWithGroq(article.Link, article.Title, article.Content, apiKey)
 		if err != nil {
 			log.Printf("Groq generation failed for '%s': %v", article.Title, err)
 			continue
@@ -99,7 +105,7 @@ func GenerateQuiz(NumberOfQuestions int, categoryIds []uint, apiKey string, diff
 	}, nil
 }
 
-func generateQuestionsWithGroq(articleTitle string, articleText string, apiKey string) (string, []models.Question, error) {
+func generateQuestionsWithGroq(articleURL string, articleTitle string, articleText string, apiKey string) (string, []models.Question, error) {
 	prompt := fmt.Sprintf(`You must return ONLY valid JSON. No markdown, no explanation, no extra text.
 
 	Return exactly this format:
@@ -200,12 +206,14 @@ func generateQuestionsWithGroq(articleTitle string, articleText string, apiKey s
 		quizTitle = articleTitle
 	}
 
+
 	questions := make([]models.Question, 0, len(valid))
 	for _, q := range valid {
 		questions = append(questions, models.Question{
 			Question: q.Question,
 			Options:  q.Options,
 			Answer:   q.Answer,
+			ArticleURL: articleURL,
 		})
 	}
 

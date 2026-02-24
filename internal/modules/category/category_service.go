@@ -27,10 +27,11 @@ func (s *Service) CreateCategory(ctx context.Context, Name string) (models.Categ
 		Name: Name,
 		Slug: makeSlug(Name),
 	}
-	if err := s.repo.Create(ctx, category); err != nil {
+	cat, err := s.repo.Create(ctx, category)
+	if err != nil {
 		return models.Category{}, err
 	}
-	return category, nil
+	return cat, nil
 }
 
 func makeSlug(name string) string {

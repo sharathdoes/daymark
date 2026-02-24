@@ -59,5 +59,6 @@ func (h *Handler) GenerateQuiz(c *gin.Context) {
 		return
 	}
 	
+	
 	c.JSON(http.StatusOK, quiz)
 }

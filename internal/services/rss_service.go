@@ -21,13 +21,18 @@ func FetchArticlesFromFeeds(feedSources []models.FeedSource) ([]models.Article, 
 
 	var articles []models.Article
 
-	for _, fs := range feedSources {
-		feed, err := parser.ParseURL(fs.URL)
+	for i := 0; i < len(feedSources); i++ {
+		feed, err := parser.ParseURL(feedSources[i].URL)
 		if err != nil {
 			return nil, err
 		}
 
+		itemCount := 0
 		for _, item := range feed.Items {
+			if itemCount >= 10 {
+				break
+			}
+
 			if item.Link == "" {
 				continue
 			}
@@ -43,19 +48,20 @@ func FetchArticlesFromFeeds(feedSources []models.FeedSource) ([]models.Article, 
 			if item.PublishedParsed != nil {
 				pub = *item.PublishedParsed
 			}
-			content,err:=extractArticleContent(item.Link)
-			if err!=nil {
+			content, err := extractArticleContent(item.Link)
+			if err != nil {
 				return []models.Article{}, err
 			}
 			articles = append(articles, models.Article{
 				Title:        item.Title,
 				Link:         item.Link,
-				Source:       fs.Name,
-				Content: content,
+				Source:       feedSources[i].Name,
+				Content:      content,
 				PublishedAt:  pub,
-				CategoryID:   fs.CategoryId,
-				FeedSourceID: fs.ID,
+				CategoryID:   feedSources[i].CategoryId,
+				FeedSourceID: feedSources[i].ID,
 			})
+			itemCount++
 		}
 	}
 
@@ -67,7 +73,7 @@ func extractArticleContent(rawURL string) (string, error) {
 
 	req, err := http.NewRequest("GET", rawURL, nil)
 	if err != nil {
-		return "",err
+		return "", err
 	}
 
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")

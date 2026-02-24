@@ -32,6 +32,9 @@ func(r *Repository) GetById(ctx context.Context, id uint) ( models.Category, err
 	return category, nil
 }
 
-func(r *Repository) Create(ctx context.Context, category models.Category) error {
-	return r.db.WithContext(ctx).Create(&category).Error
+func (r *Repository) Create(ctx context.Context, category models.Category) (models.Category, error) {
+	if err := r.db.WithContext(ctx).Create(&category).Error; err != nil {
+		return models.Category{}, err
+	}
+	return category, nil
 }
