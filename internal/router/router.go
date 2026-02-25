@@ -32,6 +32,19 @@ func New(cfg *config.Config) *Server {
 	category.RegisterRoutes(r, db, cfg)
 	quiz.RegisterRoutes(r, db, cfg)
 
+	r.GET("/debug-rss", func(c *gin.Context) {
+	resp, err := http.Get("https://www.thehindu.com/news/national/?service=rss")
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	defer resp.Body.Close()
+
+	c.JSON(200, gin.H{
+		"status": resp.Status,
+	})
+})
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
