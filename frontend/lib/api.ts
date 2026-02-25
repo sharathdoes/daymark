@@ -1,4 +1,4 @@
-import { Category, QuizSession, ApiError, Question } from '@/types';
+import { Category, QuizSession, ApiError } from '@/types';
 
 // Backend base URL (Gin server). Can be overridden with NEXT_PUBLIC_API_URL.
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
