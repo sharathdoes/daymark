@@ -200,23 +200,52 @@ func GenerateQuiz() (*Quiz, error) {
 
 func fetchArticlesFromFeeds() ([]Article, error) {
 	parser := gofeed.NewParser()
-	parser.UserAgent = "Mozilla/5.0 (compatible; QuizBot/1.0)"
 
 	var articles []Article
 
 	today := time.Now().Format("2006-01-02")
 	yesterday := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
 
+	client := &http.Client{
+		Timeout: 15 * time.Second,
+	}
+
 	for source, url := range rssFeeds {
-		feed, err := parser.ParseURL(url)
+
+		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			log.Printf("Failed to fetch RSS feed '%s' (%s): %v", source, url, err)
+			log.Printf("Failed to create request for '%s' (%s): %v", source, url, err)
+			continue
+		}
+
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+		req.Header.Set("Accept", "application/rss+xml, application/xml;q=0.9, */*;q=0.8")
+		req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Printf("HTTP request failed for '%s' (%s): %v", source, url, err)
+			continue
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			log.Printf("HTTP status %d for '%s' (%s)", resp.StatusCode, source, url)
+			resp.Body.Close()
+			continue
+		}
+
+		feed, err := parser.Parse(resp.Body)
+		resp.Body.Close()
+
+		if err != nil {
+			log.Printf("Failed to parse RSS feed '%s' (%s): %v", source, url, err)
 			continue
 		}
 
 		log.Printf("Feed '%s': %d items found", source, len(feed.Items))
 
 		for _, item := range feed.Items {
+
 			// Accept articles with no date or from today/yesterday
 			if item.PublishedParsed != nil {
 				pubDate := item.PublishedParsed.Format("2006-01-02")
