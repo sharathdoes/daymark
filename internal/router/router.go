@@ -33,7 +33,7 @@ func New(cfg *config.Config) *Server {
 	quiz.RegisterRoutes(r, db, cfg)
 
 	r.GET("/debug-rss", func(c *gin.Context) {
-	resp, err := http.Get("https://timesofindia.indiatimes.com/rssfeeds/4719148.cms")
+	resp, err := http.Get("https://www.thehindu.com/business/Industry/feeder/default.rss")
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
