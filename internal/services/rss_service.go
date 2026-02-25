@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	neturl "net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -78,18 +80,12 @@ func FetchArticlesFromFeeds(feedSources []models.FeedSource) ([]models.Article, 
 }
 
 func extractArticleContent(rawURL string) (string, error) {
-	client := &http.Client{Timeout: 15 * time.Second}
-
-	req, err := http.NewRequest("GET", rawURL, nil)
-	if err != nil {
-		return "", err
-	}
-req.Header.Set("Referer", "https://google.com")
-req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0.0.0 Safari/537.36")
-req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-req.Header.Set("Accept-Language", "en-US,en;q=0.9")
-
-	resp, err := client.Do(req)
+	 apiURL := fmt.Sprintf(
+        "https://app.scrapingbee.com/api/v1/?api_key=%s&url=%s&render_js=false",
+        os.Getenv("SCRAPINGBEE_KEY"),
+        url.QueryEscape(rawURL),
+    )
+    resp, err := http.Get(apiURL)
 	if err != nil {
 		return "", err
 	}
