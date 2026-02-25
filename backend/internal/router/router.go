@@ -20,25 +20,28 @@ type Server struct {
 
 func New(cfg *config.Config) *Server {
 	r := gin.Default()
-	r.Static("/", "./frontend/out")
 	r.Use(cors.Default())
+
 	db, err := database.Connect(cfg.DBUrl)
 	if err != nil {
-		log.Print("Error in Connecting with Database")
+		log.Fatal("Failed to connect to database:", err)
 	}
+
+	// API routes
 	feedSource.RegisterRoutes(r, db, cfg)
 	category.RegisterRoutes(r, db, cfg)
 	quiz.RegisterRoutes(r, db, cfg)
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
+
 	return &Server{Engine: r, Config: cfg}
 }
 
 func (s *Server) Run() error {
 	if s.Config.Port == "" {
-		s.Config.Port="8080"
+		s.Config.Port = "8080"
 	}
-	
 	return s.Engine.Run(":" + s.Config.Port)
 }
