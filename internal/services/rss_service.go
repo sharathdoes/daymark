@@ -3,6 +3,7 @@ package services
 import (
 	"daymark/internal/models"
 	"fmt"
+	"log"
 	"net/http"
 	neturl "net/url"
 	"strings"
@@ -48,9 +49,12 @@ func FetchArticlesFromFeeds(feedSources []models.FeedSource) ([]models.Article, 
 			if item.PublishedParsed != nil {
 				pub = *item.PublishedParsed
 			}
+
+			
 			content, err := extractArticleContent(item.Link)
 			if err != nil {
-				return []models.Article{}, err
+				log.Printf("Skipping article due to scrape error: %v", err)
+				continue
 			}
 			var categoryID uint
 			if len(feedSources[i].Categories) > 0 {
