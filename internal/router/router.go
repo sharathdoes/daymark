@@ -6,6 +6,7 @@ import (
 	"daymark/internal/modules/feedSource"
 	"daymark/internal/modules/quiz"
 	"daymark/pkg/database"
+	"io"
 	"log"
 	"net/http"
 
@@ -32,17 +33,28 @@ func New(cfg *config.Config) *Server {
 	category.RegisterRoutes(r, db, cfg)
 	quiz.RegisterRoutes(r, db, cfg)
 
+
 	r.GET("/debug-rss", func(c *gin.Context) {
-	resp, err := http.Get("https://www.thehindu.com/business/Industry/feeder/default.rss")
+	url := c.Query("url")
+	if url == "" {
+		c.JSON(400, gin.H{"error": "url query param required"})
+		return
+	}
+
+	resp, err := http.Get(url)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 	defer resp.Body.Close()
 
-	c.JSON(200, gin.H{
-		"status": resp.Status,
-	})
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Data(200, "application/xml", body)
 })
 
 	r.GET("/ping", func(c *gin.Context) {
