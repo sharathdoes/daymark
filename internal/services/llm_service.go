@@ -145,6 +145,7 @@ Article content: %s`, articleTitle, articleText)
 		return "", nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
+	log.Printf("[llm] generateQuestionsWithGroq start articleURL=%s title=%s", articleURL, articleTitle)
 	req, err := http.NewRequestWithContext(
 		context.Background(),
 		"POST",
@@ -159,8 +160,10 @@ Article content: %s`, articleTitle, articleText)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{Timeout: 30 * time.Second}
+	log.Printf("[llm] generateQuestionsWithGroq sending request to Groq model=%s", requestBody.Model)
 	resp, err := client.Do(req)
 	if err != nil {
+		log.Printf("[llm] Groq API request failed: %v", err)
 		return "", nil, fmt.Errorf("Groq API request failed: %w", err)
 	}
 	defer resp.Body.Close()
@@ -171,6 +174,12 @@ Article content: %s`, articleTitle, articleText)
 	}
 
 	if resp.StatusCode != http.StatusOK {
+		// Log a trimmed version of the body for debugging 4xx/5xx responses
+		preview := string(body)
+		if len(preview) > 300 {
+			preview = preview[:300] + "..."
+		}
+		log.Printf("[llm] Groq API non-200 status=%d body_preview=%s", resp.StatusCode, preview)
 		return "", nil, fmt.Errorf("Groq API returned HTTP %d", resp.StatusCode)
 	}
 
