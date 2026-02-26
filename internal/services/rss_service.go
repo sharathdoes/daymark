@@ -14,8 +14,13 @@ import (
 )
 
 func FetchArticlesFromFeeds(feedSources []models.FeedSource) ([]models.Article, error) {
+	client := &http.Client{
+		Timeout: 15 * time.Second,
+	}
+
 	parser := gofeed.NewParser()
-	parser.UserAgent = "Mozilla/5.0 (compatible; QuizBot/1.0)"
+	parser.Client = client
+	parser.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0.0.0 Safari/537.36"
 
 	today := time.Now().Format("2006-01-02")
 	yesterday := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
@@ -24,12 +29,33 @@ func FetchArticlesFromFeeds(feedSources []models.FeedSource) ([]models.Article, 
 
 	for i := 0; i < len(feedSources); i++ {
 		log.Printf("[rss] FetchArticlesFromFeeds parsing feed URL=%s (name=%s)", feedSources[i].URL, feedSources[i].Name)
-		feed, err := parser.ParseURL(feedSources[i].URL)
+		
+		req, _ := http.NewRequest("GET", feedSources[i].URL, nil)
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0.0.0 Safari/537.36")
+		req.Header.Set("Accept", "application/rss+xml,application/xml;q=0.9,*/*;q=0.8")
+
+		resp, err := client.Do(req)
 		if err != nil {
-			log.Printf("[rss] FetchArticlesFromFeeds error parsing feed URL=%s: %v", feedSources[i].URL, err)
-			return nil, err
+			log.Printf("feed fetch error: %v", err)
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			log.Printf("feed status %d for %s", resp.StatusCode, feedSources[i].URL)
+			continue
 		}
 
+		feed, err := parser.Parse(resp.Body)
+		if err != nil {
+			log.Printf("feed parse error: %v", err)
+			continue
+		}
+
+		if err != nil {
+			log.Printf("[rss] skipping feed URL=%s: %v", feedSources[i].URL, err)
+			continue
+		}
 		itemCount := 0
 		for _, item := range feed.Items {
 			if itemCount >= 5 {
