@@ -32,6 +32,10 @@ func (s *Service) SyncFromFeeds(ctx context.Context, feedSources []models.FeedSo
 		log.Printf("[articles] SyncFromFeeds FetchArticlesFromFeeds error: %v", err)
 		return nil, err
 	}
+	if len(fetched) == 0 {
+	log.Println("[articles] No new articles found, skipping upsert")
+	return nil,nil
+}
 	articles, err := s.repo.BulkUpsert(ctx, fetched)
 	if err != nil {
 		log.Printf("[articles] SyncFromFeeds BulkUpsert error: %v", err)
