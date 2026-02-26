@@ -69,8 +69,6 @@ func GenerateQuiz(NumberOfQuestions int, categoryIds []uint, apiKey string, diff
 			break
 		}
 
-		log.Printf("Processing article %d: %s", i+1, article.Title)
-
 		generatedTitle, questions, err := generateQuestionsWithGroq(article.Link, article.Title, article.Content, apiKey)
 		if err != nil {
 			log.Printf("Groq generation failed for '%s': %v", article.Title, err)
@@ -80,8 +78,6 @@ func GenerateQuiz(NumberOfQuestions int, categoryIds []uint, apiKey string, diff
 		if generatedTitle != "" && quizTitle == "" {
 			quizTitle = generatedTitle
 		}
-
-		log.Printf("Generated %d questions from article: %s", len(questions), article.Title)
 		allQuestions = append(allQuestions, questions...)
 
 		if len(allQuestions) >= NumberOfQuestions {
@@ -149,6 +145,7 @@ Article content: %s`, articleTitle, articleText)
 		return "", nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
+	log.Printf("[llm] generateQuestionsWithGroq start articleURL=%s title=%s", articleURL, articleTitle)
 	req, err := http.NewRequestWithContext(
 		context.Background(),
 		"POST",
@@ -163,8 +160,10 @@ Article content: %s`, articleTitle, articleText)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{Timeout: 30 * time.Second}
+	log.Printf("[llm] generateQuestionsWithGroq sending request to Groq model=%s", requestBody.Model)
 	resp, err := client.Do(req)
 	if err != nil {
+		log.Printf("[llm] Groq API request failed: %v", err)
 		return "", nil, fmt.Errorf("Groq API request failed: %w", err)
 	}
 	defer resp.Body.Close()
@@ -175,12 +174,18 @@ Article content: %s`, articleTitle, articleText)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", nil, fmt.Errorf("Groq API returned HTTP %d: %s", resp.StatusCode, string(body))
+		// Log a trimmed version of the body for debugging 4xx/5xx responses
+		preview := string(body)
+		if len(preview) > 300 {
+			preview = preview[:300] + "..."
+		}
+		log.Printf("[llm] Groq API non-200 status=%d body_preview=%s", resp.StatusCode, preview)
+		return "", nil, fmt.Errorf("Groq API returned HTTP %d", resp.StatusCode)
 	}
 
 	var groqResp GroqResponse
 	if err := json.Unmarshal(body, &groqResp); err != nil {
-		return "", nil, fmt.Errorf("failed to parse Groq response: %w\nBody: %s", err, string(body))
+		return "", nil, fmt.Errorf("failed to parse Groq response: %w", err)
 	}
 
 	// Check for API-level error in response
@@ -189,7 +194,7 @@ Article content: %s`, articleTitle, articleText)
 	}
 
 	if len(groqResp.Choices) == 0 {
-		return "", nil, fmt.Errorf("empty choices from Groq, full response: %s", string(body))
+		return "", nil, fmt.Errorf("empty choices from Groq")
 	}
 
 	raw := cleanLLMResponse(groqResp.Choices[0].Message.Content)
@@ -200,7 +205,6 @@ Article content: %s`, articleTitle, articleText)
 	var generated []llmQuestion
 	if err := json.Unmarshal([]byte(raw), &generated); err != nil {
 		log.Printf("JSON Parse Error: %v", err)
-		log.Printf("RAW LLM OUTPUT: %s", raw)
 		return "", nil, fmt.Errorf("failed to parse questions JSON: %w", err)
 	}
 
@@ -215,13 +219,12 @@ Article content: %s`, articleTitle, articleText)
 		quizTitle = articleTitle
 	}
 
-
 	questions := make([]models.Question, 0, len(valid))
 	for _, q := range valid {
 		questions = append(questions, models.Question{
-			Question: q.Question,
-			Options:  q.Options,
-			Answer:   q.Answer,
+			Question:   q.Question,
+			Options:    q.Options,
+			Answer:     q.Answer,
 			ArticleURL: articleURL,
 		})
 	}

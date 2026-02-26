@@ -337,4 +337,22 @@ async function createFeeds() {
   console.log("✨ All requests processed.");
 }
 
-createFeeds();
+// createFeeds();
+
+async function checkFeeds() {
+  for (const feed of FEEDS) {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/debug-rss?url=${encodeURIComponent(feed.URL)}`,
+      );
+
+      const data = await response.json();
+
+      console.log(`[${data.statusCode}] ${feed.Name} -> ${feed.URL}`);
+    } catch (err) {
+      console.log(`[ERROR] ${feed.Name} -> ${feed.URL}`, err.message);
+    }
+  }
+}
+
+checkFeeds();

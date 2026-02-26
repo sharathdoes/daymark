@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -21,13 +22,39 @@ type Server struct {
 
 func New(cfg *config.Config) *Server {
 	r := gin.Default()
+	r.Use(cors.Default())
+
 	db, err := database.Connect(cfg.DBUrl)
 	if err != nil {
-		log.Print("Error in Connecting with Database")
+		log.Fatal("Failed to connect to database:", err)
 	}
+
+	// API routes
 	feedSource.RegisterRoutes(r, db, cfg)
 	category.RegisterRoutes(r, db, cfg)
 	quiz.RegisterRoutes(r, db, cfg)
+
+	r.GET("/debug-rss", func(c *gin.Context) {
+		url := c.Query("url")
+		if url == "" {
+			c.JSON(400, gin.H{"error": "url query param required"})
+			return
+		}
+
+		resp, err := http.Get(url)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		defer resp.Body.Close()
+
+		c.JSON(200, gin.H{
+			"url":        url,
+			"status":     resp.Status,
+			"statusCode": resp.StatusCode,
+		})
+	})
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
@@ -37,5 +64,8 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) Run() error {
+	if s.Config.Port == "" {
+		s.Config.Port = "8080"
+	}
 	return s.Engine.Run(":" + s.Config.Port)
 }

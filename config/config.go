@@ -14,7 +14,7 @@ type Config struct {
 
 func Load() *Config {
 	_ = godotenv.Load()
-	return &Config{Port: os.Getenv("PORT"), DBUrl: os.Getenv("DB_URL"), GROQ_API_KEY: os.Getenv("GROQ_API_KEY")}
+	return &Config{Port: os.Getenv("PORT"), DBUrl: os.Getenv("DATABASE_URL"), GROQ_API_KEY: os.Getenv("GROQ_API_KEY")}
 }
 
 
