@@ -150,6 +150,7 @@ Article content: %s`, articleTitle, articleText)
 		context.Background(),
 		"POST",
 		groqURL,
+		
 		bytes.NewBuffer(jsonData),
 	)
 	if err != nil {

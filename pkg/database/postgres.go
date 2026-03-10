@@ -17,6 +17,7 @@ func Connect(url string) (*gorm.DB, error) {
 		&models.Category{},
 		&models.FeedSource{},
 		&models.Article{},
+		&models.User{},
 	)
 	return db, nil
 }

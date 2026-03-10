@@ -5,6 +5,7 @@ import (
 	"daymark/internal/modules/category"
 	"daymark/internal/modules/feedSource"
 	"daymark/internal/modules/quiz"
+	"daymark/internal/modules/user"
 	"daymark/pkg/database"
 	"log"
 	"net/http"
@@ -13,6 +14,9 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+
+	"github.com/gorilla/sessions"
+	"github.com/markbates/goth/gothic"
 )
 
 type Server struct {
@@ -29,10 +33,15 @@ func New(cfg *config.Config) *Server {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
+	user.SetupProviders(cfg)
+
+	store := sessions.NewCookieStore([]byte(cfg.SESSION_SECRET))
+	gothic.Store = store
 	// API routes
 	feedSource.RegisterRoutes(r, db, cfg)
 	category.RegisterRoutes(r, db, cfg)
 	quiz.RegisterRoutes(r, db, cfg)
+	user.RegisterRoutes(r, db, cfg)
 
 	r.GET("/debug-rss", func(c *gin.Context) {
 		url := c.Query("url")

@@ -51,11 +51,6 @@ func FetchArticlesFromFeeds(feedSources []models.FeedSource) ([]models.Article, 
 			log.Printf("feed parse error: %v", err)
 			continue
 		}
-
-		if err != nil {
-			log.Printf("[rss] skipping feed URL=%s: %v", feedSources[i].URL, err)
-			continue
-		}
 		itemCount := 0
 		for _, item := range feed.Items {
 			if itemCount >= 5 {
