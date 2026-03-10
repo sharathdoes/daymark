@@ -1,89 +1,77 @@
 # Daily Brief
 
-Backend service for generating daily briefs and quizzes from news feeds. Built with Go, Gin, and PostgreSQL.
+![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat&logo=postgresql&logoColor=white)
+![Gin](https://img.shields.io/badge/Gin-008ECF?style=flat&logo=go&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-green?style=flat)
 
-## Features
+A Go backend that turns RSS news feeds into quizzes. It scrapes and parses real news articles, stores them in Postgres, and uses Groq to generate multiple-choice questions grounded in the actual content.
 
-- Category management (create and list news categories)
-- Feed source management (create feeds, fetch feeds by categories)
-- Article ingestion from RSS feeds
-- Quiz generation from current articles using LLM
-- Auto-generated Swagger/OpenAPI docs via `swag`
+---
 
-## Tech Stack
+## How it works
 
-- Go
-- Gin HTTP framework
-- GORM with PostgreSQL
-- Swagger (swaggo) for API documentation
+Feed sources (RSS URLs) are grouped into categories. When a quiz is requested for a category:
 
-## Getting Started
+1. **Feed parsing** — RSS feeds for that category are fetched and parsed using `gofeed`, pulling item titles, links, and summary content
+2. **Article scraping** — for each feed item, the full article page is fetched and main content is extracted, stripping nav, ads, and boilerplate to get clean article text
+3. **Storage** — articles are bulk-upserted into Postgres, deduped by URL so repeated requests don't re-scrape already-seen content
+4. **Quiz generation** — a batch of recent articles is assembled and sent to Groq with a structured prompt; the LLM returns multiple-choice questions grounded in what was actually in the articles
+5. **Response** — the quiz is returned immediately, no pre-generation or caching
 
-### Prerequisites
+---
 
-- Go (matching the version in `go.mod`)
-- PostgreSQL running and accessible
+## Tech stack
 
-### Configuration
+| Layer | Tool |
+|-------|------|
+| Language | Go |
+| HTTP | Gin |
+| ORM | GORM |
+| Database | PostgreSQL |
+| Feed parsing | gofeed |
+| LLM | Groq |
+| API docs | swaggo |
 
-Create a `.env` file (or otherwise provide env vars) with at least:
+---
 
-- `DB_URL` – PostgreSQL connection string
-- `PORT` – HTTP port (e.g. `8080`)
-- `GROQ_API_KEY` – API key for quiz generation
+## Setup
 
-### Run the API server
+**Prerequisites:** Go, PostgreSQL
+
+**1. Clone and install dependencies**
 
 ```bash
-cd daymark
+git clone https://github.com/yourname/daily-brief
+cd daily-brief
+go mod download
+```
+
+**2. Configure environment**
+
+```env
+DB_URL=postgres://user:password@localhost:5432/dailybrief
+PORT=8080
+GROQ_API_KEY=your_key_here
+```
+
+**3. Run**
+
+```bash
 go run cmd/api/main.go
 ```
 
-The API will start on `http://localhost:<PORT>` (default 8080 if configured that way).
+API docs at `http://localhost:8080/swagger/index.html`
 
-## Swagger / API Documentation
+---
 
-Swagger UI is included and mounted in the API server.
+## API
 
-- Start the server as above.
-- Open in your browser:
-  - `http://localhost:8080/swagger/index.html`
-
-From the Swagger UI you can:
-
-- Browse all endpoints (categories, feeds, quiz)
-- See request/response schemas
-- Use **Try it out** to send real requests from the browser
-
-### Regenerating Swagger docs
-
-If you change handler comments or DTOs and want to regenerate docs:
-
-```bash
-cd daymark
-swag init -g cmd/api/main.go -o docs
-```
-
-This updates:
-
-- `docs/docs.go`
-- `docs/swagger.json`
-- `docs/swagger.yaml`
-
-## Main Endpoints (overview)
-
-- `GET /ping` – health check
-
-**Categories**
-- `GET /category/` – list all categories
-- `GET /category/{id}` – get a category by ID
-- `POST /category/` – create a category
-
-**Feeds**
-- `POST /feed/create` – create a feed source with one or more `categoryIds`
-- `GET /feed/ofCategories` – get feed sources for the given category IDs
-
-**Quiz**
-- `POST /quiz/generate` – generate a quiz based on articles from selected categories
-
-For full details, models, and example payloads, see the Swagger UI.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/ping` | Health check |
+| `GET` | `/category/` | List all categories |
+| `POST` | `/category/` | Create a category |
+| `POST` | `/feed/create` | Add a feed source |
+| `GET` | `/feed/ofCategories` | Get feeds for given category IDs |
+| `POST` | `/quiz/generate` | Generate a quiz from recent articles |
