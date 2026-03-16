@@ -11,7 +11,7 @@ import {
   SaveQuizResultRequest,
 } from './types'
 
-const BASE_URL = 'http://localhost:8080'
+const BASE_URL = "https://alright-bev-lumaai-69a46e17.koyeb.app";
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms))
 
