@@ -57,7 +57,6 @@ export default function SharedQuizPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header hideAuth />
       <main className="flex-1 p-4 md:p-8">
         <div className="w-full max-w-4xl mx-auto">
           {loading ? (
