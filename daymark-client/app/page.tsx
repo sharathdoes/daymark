@@ -138,15 +138,20 @@ export default function HomePage() {
           {/* Hero */}
           <section className="mb-10 md:mb-12 text-center">
             <p className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase mb-3">
-              Current affairs, not random trivia
+              {new Date().toLocaleDateString("en-IN", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })}
             </p>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-balance mb-3">
-              Understand the news, not just guess it.
+              You read the news today ? <br />
+              Let's see how much stuck in.
             </h1>
-            <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
-              Daymark turns today&apos;s reporting into clear, exam-style questions built from live RSS
-              feeds. Every quiz is grounded in real articles, so you practice recall, context, and
-              judgement on actual news — not shuffled factoids.
+            <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto">
+              Every question is pulled from a real article published today. No
+              trivia, no recycled facts — just today's news and how well you
+              followed it.
             </p>
           </section>
 
@@ -160,7 +165,9 @@ export default function HomePage() {
 
           {isLoading ? (
             <div className="flex justify-center py-16">
-              <p className="text-sm text-muted-foreground">Loading categories…</p>
+              <p className="text-sm text-muted-foreground">
+                Loading categories…
+              </p>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] items-start">
@@ -169,25 +176,28 @@ export default function HomePage() {
                 <CardHeader>
                   <CardTitle>Select categories</CardTitle>
                   <CardDescription>
-                    Choose the topics you&apos;d like today&apos;s quiz to focus on.
+                    Choose the topics you&apos;d like today&apos;s quiz to focus
+                    on.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2.5">
                     {categories.map((category) => {
-                      const selected = selectedCategoryIds.includes(category.id)
+                      const selected = selectedCategoryIds.includes(
+                        category.id,
+                      );
                       return (
                         <Button
                           key={category.id}
                           type="button"
-                          variant={selected ? 'default' : 'outline'}
+                          variant={selected ? "default" : "outline"}
                           size="sm"
                           className="justify-start truncate"
                           onClick={() => toggleCategory(category.id)}
                         >
                           {category.name}
                         </Button>
-                      )
+                      );
                     })}
                   </div>
 
@@ -202,7 +212,9 @@ export default function HomePage() {
                             key={count}
                             type="button"
                             size="sm"
-                            variant={questionCount === count ? 'default' : 'outline'}
+                            variant={
+                              questionCount === count ? "default" : "outline"
+                            }
                             onClick={() => setQuestionCount(count)}
                           >
                             {count}
@@ -221,7 +233,9 @@ export default function HomePage() {
                             key={option.id}
                             type="button"
                             size="sm"
-                            variant={timerOption === option.id ? 'default' : 'outline'}
+                            variant={
+                              timerOption === option.id ? "default" : "outline"
+                            }
                             onClick={() => setTimerOption(option.id)}
                           >
                             {option.label}
@@ -243,7 +257,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {DIFFICULTIES.map((difficulty) => {
-                    const active = selectedDifficulty === difficulty.id
+                    const active = selectedDifficulty === difficulty.id;
                     return (
                       <button
                         key={difficulty.id}
@@ -251,16 +265,18 @@ export default function HomePage() {
                         onClick={() => setSelectedDifficulty(difficulty.id)}
                         className={`w-full rounded-md border px-4 py-3 text-left text-sm transition-colors ${
                           active
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border bg-background hover:bg-accent/40'
+                            ? "border-primary bg-primary/5"
+                            : "border-border bg-background hover:bg-accent/40"
                         }`}
                       >
-                        <div className="font-medium mb-0.5">{difficulty.label}</div>
+                        <div className="font-medium mb-0.5">
+                          {difficulty.label}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {difficulty.description}
                         </p>
                       </button>
-                    )
+                    );
                   })}
                 </CardContent>
               </Card>
@@ -270,11 +286,10 @@ export default function HomePage() {
           {/* Primary CTA */}
           <section className="mt-10 flex flex-col items-center gap-4 text-center">
             <div className="space-y-1">
-           
               <p className="text-sm md:text-base text-muted-foreground max-w-md">
                 {selectedCategoryIds.length === 0
-                  ? 'Choose a few topics and a difficulty to begin.'
-                  : `You\'re set for a ${selectedDifficulty ?? 'news'} quiz across ${selectedCategoryIds.length} topic${selectedCategoryIds.length > 1 ? 's' : ''}.`}
+                  ? "Choose a few topics and a difficulty to begin."
+                  : `You\'re set for a ${selectedDifficulty ?? "news"} quiz across ${selectedCategoryIds.length} topic${selectedCategoryIds.length > 1 ? "s" : ""}.`}
               </p>
             </div>
 
@@ -285,14 +300,14 @@ export default function HomePage() {
               disabled={!canStart || isGenerating}
               className="min-w-[200px] shadow-sm"
             >
-              {isGenerating ? 'Preparing your quiz…' : 'Start today\'s quiz'}
+              {isGenerating ? "Preparing your quiz…" : "Start today's quiz"}
             </Button>
 
             {!isAuthenticated && (
               <p className="text-xs md:text-sm text-muted-foreground">
                 <Link href="/login" className="underline underline-offset-4">
                   Sign in
-                </Link>{' '}
+                </Link>{" "}
                 to save your streaks and past quizzes.
               </p>
             )}
@@ -300,5 +315,5 @@ export default function HomePage() {
         </div>
       </main>
     </div>
-  )
+  );
 }
