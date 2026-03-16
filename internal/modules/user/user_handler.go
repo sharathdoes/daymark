@@ -23,7 +23,7 @@ type Handler struct {
 }
 
 func NewHandler(s *Service, cfg *config.Config) *Handler {
-	frontendURL := "http://localhost:3000"
+	frontendURL :=cfg.FRONTEND_URL
 	if cfg != nil && cfg.FRONTEND_URL != "" {
 		frontendURL = cfg.FRONTEND_URL
 	}
