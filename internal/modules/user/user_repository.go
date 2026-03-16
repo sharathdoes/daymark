@@ -18,6 +18,10 @@ func (r *Repository) Create(user *models.User) error {
 	return r.db.Create(user).Error
 }
 
+func (r *Repository) Update(user *models.User) error {
+	return r.db.Save(user).Error
+}
+
 func (r *Repository) GetByEmail(email string) (*models.User, error) {
 
 	var user models.User
@@ -37,5 +41,11 @@ func (r *Repository) GetByProvider(provider, providerID string) (*models.User, e
 		Where("provider = ? AND provider_id = ?", provider, providerID).
 		First(&user).Error
 
+	return &user, err
+}
+
+func (r *Repository) GetByID(id uint) (*models.User, error) {
+	var user models.User
+	err := r.db.First(&user, id).Error
 	return &user, err
 }

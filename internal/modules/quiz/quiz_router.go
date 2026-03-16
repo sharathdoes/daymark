@@ -4,6 +4,7 @@ import (
 	"daymark/config"
 	"daymark/internal/modules/articles"
 	"daymark/internal/modules/feedSource"
+	"daymark/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -28,5 +29,13 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	g := r.Group("/quiz")
 	{
 		g.POST("/generate", h.GenerateQuiz)
+		g.GET("/view/:id", h.GetQuizByID)
+	}
+
+	protected := r.Group("/quiz")
+	protected.Use(utils.AuthMiddleware(cfg.JWT_SECRET))
+	{
+		protected.POST("/results", h.SaveResult)
+		protected.GET("/results", h.GetResults)
 	}
 }

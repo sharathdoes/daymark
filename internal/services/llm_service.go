@@ -204,6 +204,7 @@ Article content: %s`, articleTitle, articleText)
 	}
 
 	var generated []llmQuestion
+	log.Printf("[llm] raw Groq response after cleaning: %s", raw)
 	if err := json.Unmarshal([]byte(raw), &generated); err != nil {
 		log.Printf("JSON Parse Error: %v", err)
 		return "", nil, fmt.Errorf("failed to parse questions JSON: %w", err)

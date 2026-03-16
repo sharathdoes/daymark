@@ -2,7 +2,6 @@ package models
 
 import (
 	"time"
-
 )
 
 type User struct {
@@ -13,10 +12,14 @@ type User struct {
 
 	PasswordHash string `json:"-"`
 
-	Provider   string `json:"provider"`     // google, github, email
-	ProviderID string `json:"provider_id"`  // oauth id
+	Provider   string `json:"provider"`    // google, github, email
+	ProviderID string `json:"provider_id"` // oauth id
 
 	AvatarURL string `json:"avatar_url"`
+
+	EmailVerified     bool      `json:"email_verified"`
+	EmailOTP          string    `json:"-"`
+	EmailOTPExpiresAt time.Time `json:"-"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

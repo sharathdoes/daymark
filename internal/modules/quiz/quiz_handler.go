@@ -79,5 +79,82 @@ func (h *Handler) GenerateQuiz(c *gin.Context) {
 		return
 	}
 	log.Printf("[quiz] GenerateQuiz success - title=%s questions=%d", quiz.Title, len(quiz.Questions))
+
+	// Save the quiz to the database so it can be shared via ID
+	if err := h.repo.SaveQuiz(c.Request.Context(), quiz); err != nil {
+		log.Printf("[quiz] GenerateQuiz failed to save to database: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save quiz"})
+		return
+	}
+	log.Printf("[quiz] GenerateQuiz after-save quiz.ID=%d", quiz.ID)
+
 	c.JSON(http.StatusOK, quiz)
+}
+
+// GetQuizByID fetches a generated quiz by its numeric ID
+func (h *Handler) GetQuizByID(c *gin.Context) {
+	quizID := c.Param("id")
+	if quizID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id parameter required"})
+		return
+	}
+
+	quiz, err := h.repo.GetQuizByID(c.Request.Context(), quizID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Quiz not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, quiz)
+}
+
+// SaveResult saves a completed quiz result for the authenticated user
+func (h *Handler) SaveResult(c *gin.Context) {
+	userIDVal, ok := c.Get("userID")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	userID := userIDVal.(uint)
+
+	var body SaveQuizResultDTO
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	result := &models.UserQuizResult{
+		UserID:         userID,
+		QuizID:         body.QuizID,
+		Score:          body.Score,
+		TotalQuestions: body.TotalQuestions,
+		Difficulty:     body.Difficulty,
+		Categories:     body.Categories,
+	}
+
+	err := h.repo.SaveUserResult(c.Request.Context(), result)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save result: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+// GetResults fetches past completed quiz results for the authenticated user
+func (h *Handler) GetResults(c *gin.Context) {
+	userIDVal, ok := c.Get("userID")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	userID := userIDVal.(uint)
+
+	results, err := h.repo.GetResultsByUserID(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load results: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, results)
 }

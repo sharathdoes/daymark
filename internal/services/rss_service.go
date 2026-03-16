@@ -53,7 +53,7 @@ func FetchArticlesFromFeeds(feedSources []models.FeedSource) ([]models.Article, 
 		}
 		itemCount := 0
 		for _, item := range feed.Items {
-			if itemCount >= 5 {
+			if itemCount >= 10 {
 				break
 			}
 

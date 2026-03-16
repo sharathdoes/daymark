@@ -20,6 +20,11 @@ type Config struct {
 	FRONTEND_URL         string
 	JWT_SECRET           string
 	SESSION_SECRET       string
+	SMTP_HOST            string
+	SMTP_PORT            string
+	SMTP_USERNAME        string
+	SMTP_PASSWORD        string
+	SMTP_FROM            string
 }
 
 func Load() *Config {
@@ -41,6 +46,11 @@ func Load() *Config {
 		FRONTEND_URL:         getEnv("FRONTEND_URL", "http://localhost:3000"),
 		JWT_SECRET:           os.Getenv("JWT_SECRET"),
 		SESSION_SECRET:       getEnv("SESSION_SECRET", "super-secret"),
+		SMTP_HOST:            os.Getenv("SMTP_HOST"),
+		SMTP_PORT:            getEnv("SMTP_PORT", "587"),
+		SMTP_USERNAME:        os.Getenv("SMTP_USERNAME"),
+		SMTP_PASSWORD:        os.Getenv("SMTP_PASSWORD"),
+		SMTP_FROM:            os.Getenv("SMTP_FROM"),
 	}
 }
 
