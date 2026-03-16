@@ -81,6 +81,38 @@ export default function ResultsContent() {
   return (
     <div className="space-y-10">
       {/* Score summary */}
+
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <Button
+          type="button"
+          onClick={handleTryAgain}
+          className="min-w-[150px]"
+        >
+          Try again with same settings
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={handleShare}
+          className="min-w-[150px]"
+        >
+          {copied ? (
+            <Check className="w-4 h-4 mr-2" />
+          ) : (
+            <LinkIcon className="w-4 h-4 mr-2" />
+          )}
+          {copied ? "Copied!" : "Share Quiz"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleNewQuiz}
+          className="min-w-[150px]"
+        >
+          Start a new quiz
+        </Button>
+      </div>
+      
       <Card>
         <CardHeader className="text-center space-y-3">
           <CardTitle className="text-4xl md:text-5xl font-semibold">
@@ -105,7 +137,7 @@ export default function ResultsContent() {
 
         <div className="space-y-5">
           {session.quiz.questions.map((question, qIndex) => {
-            const userAnswer = session.answers[qIndex]
+            const userAnswer = session.answers[qIndex];
 
             return (
               <Card key={qIndex} className="border-border/80">
@@ -121,19 +153,19 @@ export default function ResultsContent() {
 
                   <div className="space-y-1.5 pl-8">
                     {question.options.map((option, optIndex) => {
-                      const isQuestionCorrect = optIndex === question.answer
-                      const isUserSelected = optIndex === userAnswer
-                      const isUserWrong = isUserSelected && !isQuestionCorrect
+                      const isQuestionCorrect = optIndex === question.answer;
+                      const isUserSelected = optIndex === userAnswer;
+                      const isUserWrong = isUserSelected && !isQuestionCorrect;
 
                       return (
                         <div
                           key={optIndex}
                           className={`flex items-start gap-2 rounded-md border px-3 py-1.5 text-xs md:text-sm ${
                             isQuestionCorrect
-                              ? 'border-emerald-500 bg-emerald-500/10 text-emerald-100'
+                              ? "border-emerald-500 bg-emerald-500/10 text-emerald-100"
                               : isUserWrong
-                              ? 'border-destructive/60 bg-destructive/10 text-destructive'
-                              : 'border-border/70 text-muted-foreground'
+                                ? "border-destructive/60 bg-destructive/10 text-destructive"
+                                : "border-border/70 text-muted-foreground"
                           }`}
                         >
                           <span className="mt-0.5 font-mono font-semibold">
@@ -141,12 +173,12 @@ export default function ResultsContent() {
                           </span>
                           <span>{option}</span>
                         </div>
-                      )
+                      );
                     })}
                   </div>
 
                   <p className="pl-8 text-[11px] text-muted-foreground mt-4 inline-block bg-accent/20 px-3 py-1.5 rounded-md border border-border/50 font-medium">
-                    View the source article for this answer:{' '}
+                    View the source article for this answer:{" "}
                     <a
                       href={question.article_url}
                       target="_blank"
@@ -158,34 +190,12 @@ export default function ResultsContent() {
                   </p>
                 </CardContent>
               </Card>
-            )
+            );
           })}
         </div>
       </section>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        <Button type="button" onClick={handleTryAgain} className="min-w-[150px]">
-          Try again with same settings
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={handleShare}
-          className="min-w-[150px]"
-        >
-          {copied ? <Check className="w-4 h-4 mr-2" /> : <LinkIcon className="w-4 h-4 mr-2" />}
-          {copied ? 'Copied!' : 'Share Quiz'}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleNewQuiz}
-          className="min-w-[150px]"
-        >
-          Start a new quiz
-        </Button>
-      </div>
     </div>
-  )
+  );
 }
