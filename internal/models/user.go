@@ -21,6 +21,6 @@ type User struct {
 	EmailOTP          string    `json:"-"`
 	EmailOTPExpiresAt time.Time `json:"-"`
 
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

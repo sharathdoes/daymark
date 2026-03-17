@@ -43,7 +43,7 @@ func Load() *Config {
 		APP_BASE_URL:         appBaseURL,
 		GOOGLE_CALLBACK_URL:  getEnv("GOOGLE_CALLBACK_URL", appBaseURL+"/user/google/callback"),
 		GITHUB_CALLBACK_URL:  getEnv("GITHUB_CALLBACK_URL", appBaseURL+"/user/github/callback"),
-		FRONTEND_URL:         getEnv("FRONTEND_URL", "https://daymark-eight.vercel.app"),
+		FRONTEND_URL:         os.Getenv("FRONTEND_URL"),
 		JWT_SECRET:           os.Getenv("JWT_SECRET"),
 		SESSION_SECRET:       getEnv("SESSION_SECRET", "super-secret"),
 		SMTP_HOST:            os.Getenv("SMTP_HOST"),

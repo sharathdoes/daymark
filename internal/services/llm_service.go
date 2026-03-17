@@ -69,7 +69,18 @@ func GenerateQuiz(NumberOfQuestions int, categoryIds []uint, apiKey string, diff
 			break
 		}
 
-		generatedTitle, questions, err := generateQuestionsWithGroq(article.Link, article.Title, article.Content, apiKey)
+		// How many questions we still need
+		remaining := NumberOfQuestions - len(allQuestions)
+		if remaining <= 0 {
+			break
+		}
+		// Ask for up to 3 per article, but no more than remaining
+		perArticle := 3
+		if remaining < perArticle {
+			perArticle = remaining
+		}
+
+		generatedTitle, questions, err := generateQuestionsWithGroq(article.Link, article.Title, article.Content, apiKey, difficulty, perArticle)
 		if err != nil {
 			log.Printf("Groq generation failed for '%s': %v", article.Title, err)
 			continue
@@ -101,7 +112,7 @@ func GenerateQuiz(NumberOfQuestions int, categoryIds []uint, apiKey string, diff
 	}, nil
 }
 
-func generateQuestionsWithGroq(articleURL string, articleTitle string, articleText string, apiKey string) (string, []models.Question, error) {
+func generateQuestionsWithGroq(articleURL string, articleTitle string, articleText string, apiKey string, difficulty string, numQuestions int) (string, []models.Question, error) {
 	prompt := fmt.Sprintf(`You must return ONLY valid JSON. No markdown, no explanation, no extra text.
 
 Return exactly this format:
@@ -116,19 +127,24 @@ Return exactly this format:
 
 The "answer" field must be the zero-based index of the correct option (0, 1, 2, or 3).
 
-Generate EXACTLY 3 simple UPSC-style multiple choice questions based ONLY on clearly stated facts in the article.
+Generate EXACTLY %d multiple choice questions based ONLY on clearly stated facts in the article.
+Difficulty level: %s
+
+Difficulty guidelines:
+- easy: straightforward factual questions any reader would get from one quick read
+- medium: requires careful reading; may involve numbers, names, or comparing two facts
+- hard: nuanced questions requiring full comprehension; may involve sequences, conditions, or combining multiple facts
 
 IMPORTANT RULES:
 - Do NOT ask deep analytical, opinion-based, or conceptual questions.
-- Do NOT frame questions on theoretical background beyond what is mentioned.
-- Keep questions straightforward and factual.
+- Keep questions aligned to the difficulty level above.
 - Each question must focus on a DIFFERENT fact, event, person, place, scheme, date, or policy mentioned in the article.
 - Cover different parts of the article quickly. Do not stay on the same sub-topic.
 - The title must be catchy and category-based, NOT about the specific subject of the article.
 - Keep questions concise and exam-oriented.
 
 Article title: %s
-Article content: %s`, articleTitle, articleText)
+Article content: %s`, numQuestions, difficulty, articleTitle, articleText)
 
 	requestBody := GroqRequest{
 		Model: "llama-3.3-70b-versatile",
