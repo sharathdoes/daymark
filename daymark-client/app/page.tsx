@@ -94,6 +94,15 @@ export default function HomePage() {
       params.set('categories', selectedCategoryIds.join(','))
       if (selectedDifficulty) params.set('difficulty', selectedDifficulty)
       params.set('count', String(questionCount))
+      params.set('timer', timerOption)
+
+      // Persist in localStorage so OAuth redirects don't lose the selection
+      localStorage.setItem('pendingQuiz', JSON.stringify({
+        categories: selectedCategoryIds,
+        difficulty: selectedDifficulty,
+        count: questionCount,
+        timer: timerOption,
+      }))
 
       router.push(`/login?${params.toString()}`)
       return

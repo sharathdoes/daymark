@@ -74,9 +74,8 @@ export default function QuizContent() {
   const progress = ((session.currentIndex + 1) / totalQuestions) * 100
 
   const handleOptionClick = (optionIndex: number) => {
-    if (!isAnswered) {
-      answerQuestion(session.currentIndex, optionIndex)
-    }
+    // Allow reselecting a different option before clicking Next
+    answerQuestion(session.currentIndex, optionIndex)
   }
 
   const handleNext = () => {

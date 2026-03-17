@@ -162,7 +162,7 @@ export default function ResultsContent() {
                           key={optIndex}
                           className={`flex items-start gap-2 rounded-md border px-3 py-1.5 text-xs md:text-sm ${
                             isQuestionCorrect
-                              ? "border-emerald-500 bg-emerald-500/10 text-emerald-100"
+                              ? "border-emerald-500 bg-emerald-500/20 text-emerald-800 dark:text-emerald-100"
                               : isUserWrong
                                 ? "border-destructive/60 bg-destructive/10 text-destructive"
                                 : "border-border/70 text-muted-foreground"
