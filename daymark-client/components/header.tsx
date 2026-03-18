@@ -40,7 +40,7 @@ export default function Header({ hideAuth = false }: HeaderProps) {
         <div className="flex items-center gap-1">
 
           <Link
-            href="https://github.com/yourusername/yourrepo"
+            href="https://github.com/sharathdoes/daymark"
             target="_blank"
             className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
           >
