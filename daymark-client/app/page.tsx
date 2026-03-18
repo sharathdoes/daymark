@@ -9,6 +9,9 @@ import { Category, QuizSession } from '@/lib/types'
 import Header from '@/components/header'
 import LoadingOverlay from '@/components/loading-overlay'
 import { Button } from '@/components/ui/button'
+import { Highlighter } from '@/components/ui/highlighter'
+import { AnimatedShinyText } from '@/components/ui/animated-shiny-text'
+import { ArrowRightIcon } from '@radix-ui/react-icons'
 import {
   Card,
   CardContent,
@@ -146,21 +149,34 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto px-4 py-10 md:py-14">
           {/* Hero */}
           <section className="mb-10 md:mb-12 text-center">
-            <p className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase mb-3">
-              {new Date().toLocaleDateString("en-IN", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-              })}
-            </p>
+            <Link href="/daily" className="mb-4 inline-block">
+              <div className="group rounded-full border border-black/5 bg-neutral-100 text-base text-white transition-all ease-in hover:cursor-pointer hover:bg-neutral-200 dark:border-white/5 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+                <AnimatedShinyText className="inline-flex items-center justify-center px-4 py-1 transition ease-out hover:text-neutral-600 hover:duration-300 hover:dark:text-neutral-400">
+                  <span>✨ Quiz of the Day</span>
+                  <ArrowRightIcon className="ml-1 size-3 transition-transform duration-300 ease-in-out group-hover:translate-x-0.5" />
+                </AnimatedShinyText>
+              </div>
+            </Link>
+
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-balance mb-3">
-              You read the news today ? <br />
-              Let's see how much stuck in.
+              You read the news{" "}
+              <Highlighter action="underline" color="#FF9800" animationDuration={800}>
+                today
+              </Highlighter>
+              ?{" "}<br />
+              Let&apos;s see how much stuck in.
             </h1>
             <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto">
               Every question is pulled from a real article published today. No
-              trivia, no recycled facts — just today's news and how well you
-              followed it.
+              trivia, no recycled facts — just{" "}
+              <Highlighter action="highlight" color="#FF980033" animationDuration={1000}>
+                today&apos;s news
+              </Highlighter>
+              {" "}and{" "}
+              <Highlighter action="underline" color="#6366f1" animationDuration={1200}>
+                how well you followed it
+              </Highlighter>
+              .
             </p>
           </section>
 
@@ -171,6 +187,7 @@ export default function HomePage() {
               </Card>
             </div>
           )}
+
 
           {isLoading ? (
             <div className="flex justify-center py-16">

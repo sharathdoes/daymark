@@ -1,6 +1,7 @@
 package quiz
 
 import (
+	"context"
 	"daymark/config"
 	"daymark/internal/models"
 	"daymark/internal/modules/articles"
@@ -8,15 +9,22 @@ import (
 	"daymark/internal/services"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+// Scheduler is a minimal interface so the handler can trigger generation on demand.
+type Scheduler interface {
+	RunNow(ctx context.Context) error
+}
 
 type Handler struct {
 	repo           *Repository
 	FeedService    *feedSource.Service
 	ArticleService *articles.Service
 	cfg            config.Config
+	Scheduler      Scheduler // may be nil if scheduler not wired
 }
 
 func (h *Handler) GetArticles(c *gin.Context, CategoryIds []uint) ([]models.Article, error) {
@@ -157,4 +165,49 @@ func (h *Handler) GetResults(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, results)
+}
+
+// GetDailyQuiz returns today's pre-generated Quiz of the Day.
+// It is public (no auth required).
+func (h *Handler) GetDailyQuiz(c *gin.Context) {
+	today := time.Now().Format("2006-01-02")
+	quiz, err := h.repo.GetDailyQuizByDate(c.Request.Context(), today)
+	if err != nil {
+		log.Printf("[quiz] GetDailyQuiz not found for date=%s err=%v", today, err)
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "No quiz of the day yet — check back later or after 6 AM IST.",
+			"date":  today,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, quiz)
+}
+
+// TriggerDailyQuiz is a protected endpoint that immediately runs the daily quiz generation.
+// Useful for testing and backfilling. Protected by JWT auth.
+func (h *Handler) TriggerDailyQuiz(c *gin.Context) {
+	if h.Scheduler == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "scheduler not configured"})
+		return
+	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Minute)
+	defer cancel()
+
+	if err := h.Scheduler.RunNow(ctx); err != nil {
+		log.Printf("[quiz] TriggerDailyQuiz error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Return the newly created (or existing) quiz
+	today := time.Now().Format("2006-01-02")
+	quiz, err := h.repo.GetDailyQuizByDate(c.Request.Context(), today)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"message": "daily quiz generated successfully"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "daily quiz generated successfully",
+		"quiz":    quiz,
+	})
 }

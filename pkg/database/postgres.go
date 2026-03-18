@@ -23,6 +23,7 @@ func Connect(url string) (*gorm.DB, error) {
 		&models.User{},
 		&models.UserQuizResult{},
 		&models.Quiz{},
+		&models.DailyQuiz{},
 	)
 	return db, nil
 }

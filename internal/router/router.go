@@ -6,6 +6,7 @@ import (
 	"daymark/internal/modules/feedSource"
 	"daymark/internal/modules/quiz"
 	"daymark/internal/modules/user"
+	"daymark/internal/scheduler"
 	"daymark/pkg/database"
 	"log"
 	"net/http"
@@ -43,10 +44,15 @@ func New(cfg *config.Config) *Server {
 
 	store := sessions.NewCookieStore([]byte(cfg.SESSION_SECRET))
 	gothic.Store = store
+
+	// Start the daily quiz scheduler (6 AM IST every day)
+	dailySched := scheduler.NewDailyQuizScheduler(db, cfg)
+	dailySched.Start()
+
 	// API routes
 	feedSource.RegisterRoutes(r, db, cfg)
 	category.RegisterRoutes(r, db, cfg)
-	quiz.RegisterRoutes(r, db, cfg)
+	quiz.RegisterRoutes(r, db, cfg, dailySched)
 	user.RegisterRoutes(r, db, cfg)
 
 	r.GET("/debug-rss", func(c *gin.Context) {
@@ -84,3 +90,4 @@ func (s *Server) Run() error {
 	}
 	return s.Engine.Run(":" + s.Config.Port)
 }
+

@@ -21,6 +21,7 @@ require (
 require (
 	github.com/gorilla/sessions v1.4.0
 	github.com/markbates/goth v1.82.0
+	github.com/robfig/cron/v3 v3.0.1
 )
 
 require (

@@ -173,6 +173,15 @@ export async function getQuizById(id: string): Promise<Quiz> {
   return res.json()
 }
 
+// GET /quiz/daily — returns null if no quiz has been generated yet today
+export async function getDailyQuiz(): Promise<Quiz | null> {
+  const res = await fetch(`${BASE_URL}/quiz/daily`)
+  if (res.status === 404) return null
+  if (!res.ok) throw new Error('Failed to fetch daily quiz')
+  return res.json()
+}
+
+
 // POST /quiz/results
 export async function saveQuizResult(req: SaveQuizResultRequest): Promise<UserQuizResult> {
   const token = getToken()

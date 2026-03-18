@@ -2,6 +2,7 @@ package quiz
 
 import (
 	"daymark/internal/models"
+	"fmt"
 	"log"
 
 	"golang.org/x/net/context"
@@ -47,4 +48,31 @@ func (r *Repository) GetResultsByUserID(ctx context.Context, userID uint) ([]mod
 	var results []models.UserQuizResult
 	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Order("created_at desc").Find(&results).Error
 	return results, err
+}
+
+// GetDailyQuizByDate returns the Quiz assigned as the daily quiz for the given date ("YYYY-MM-DD").
+func (r *Repository) GetDailyQuizByDate(ctx context.Context, date string) (*models.Quiz, error) {
+	var dq models.DailyQuiz
+	if err := r.db.WithContext(ctx).Where("date = ?", date).First(&dq).Error; err != nil {
+		return nil, err
+	}
+	return r.GetQuizByID(ctx, fmt.Sprintf("%d", dq.QuizID))
+}
+
+// SaveDailyQuiz persists a DailyQuiz record (one per date). Returns an error if the date already has one.
+func (r *Repository) SaveDailyQuiz(ctx context.Context, dq *models.DailyQuiz) error {
+	result := r.db.WithContext(ctx).Create(dq)
+	if result.Error != nil {
+		log.Printf("[repo] SaveDailyQuiz ERROR: %v", result.Error)
+		return result.Error
+	}
+	log.Printf("[repo] SaveDailyQuiz SUCCESS: date=%s quiz_id=%d", dq.Date, dq.QuizID)
+	return nil
+}
+
+// HasDailyQuizForDate returns true if a DailyQuiz row already exists for the given date.
+func (r *Repository) HasDailyQuizForDate(ctx context.Context, date string) bool {
+	var count int64
+	r.db.WithContext(ctx).Model(&models.DailyQuiz{}).Where("date = ?", date).Count(&count)
+	return count > 0
 }

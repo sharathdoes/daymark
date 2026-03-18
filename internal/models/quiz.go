@@ -111,3 +111,12 @@ type Quiz struct {
 	Questions   Questions   `gorm:"type:text" json:"questions"`
 	CreatedAt   time.Time   `json:"created_at"`
 }
+
+// DailyQuiz records which Quiz is selected as the Quiz of the Day.
+// Date is stored as "YYYY-MM-DD" and is unique — one quiz per calendar day.
+type DailyQuiz struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	QuizID    uint      `gorm:"index" json:"quiz_id"`
+	Date      string    `gorm:"uniqueIndex;size:10" json:"date"` // "YYYY-MM-DD"
+	CreatedAt time.Time `json:"created_at"`
+}
