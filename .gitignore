@@ -1,0 +1,26 @@
+.env
+
+# Go build artifacts
+bin/
+dist/
+build/
+*.exe
+*.test
+*.out
+coverage.*
+
+# Next.js / Node (daymark-client)
+daymark-client/node_modules/
+daymark-client/.next/
+daymark-client/.turbo/
+daymark-client/.vercel/
+daymark-client/.env*
+
+# Editor / OS files
+.vscode/
+.idea/
+*.log
+**/.DS_Store
+env
+
+.env
